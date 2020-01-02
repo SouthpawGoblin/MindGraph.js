@@ -2,13 +2,15 @@
   "name": "mind-graph-js",
   "version": "0.0.1",
   "main": "dist/index.min.js",
+  "types": "dist/index.d.ts",
   "repository": "https://github.com/SouthpawGoblin/MindGraph.js.git",
   "author": "Yinzhe_Qi <qiyzh@neusoft.com>",
   "license": "MIT",
   "private": false,
   "scripts": {
-    "dev": "cross-env NODE_ENV=development webpack --watch",
-    "dist": "cross-env NODE_ENV=production webpack"
+    "dev": "cross-env NODE_ENV=development webpack --config webpack.config.dev.js --watch",
+    "dist": "cross-env NODE_ENV=production webpack --config webpack.config.dist.js",
+    "docs": "cross-env NODE_ENV=production webpack --config webpack.config.docs.js"
   },
   "devDependencies": {
     "cross-env": "^6.0.3",

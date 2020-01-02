@@ -6,14 +6,13 @@ const path = require('path');
 const isDev = process.env.NODE_ENV === 'development';
 console.log(process.env.NODE_ENV);
 
-module.exports = {
-  mode: process.env.NODE_ENV || 'production',
-  entry: path.resolve(__dirname, isDev ? 'test/index.ts' : 'src/index.ts'),
+const config = {
+  mode: 'production',
+  entry: path.resolve(__dirname, 'src/index.ts'),
   output: {
-    path: path.resolve(__dirname, isDev ? 'build' : 'dist'),
+    path: path.resolve(__dirname, 'dist'),
     filename: 'index.min.js'
   },
-  devtool: 'eval-source-map',
   resolve: {
     extensions: [".ts", ".js"]
   },
@@ -23,14 +22,11 @@ module.exports = {
         test: /\.ts$/, 
         loader: 'ts-loader',
         options: {
-          transpileOnly: false
-        } 
+          configFile: path.resolve(__dirname, 'tsconfig.dist.json')
+        }
       }
     ]
-  },
-  plugins: isDev ? [
-    new HtmlWebpackPlugin({ template: './test/index.html' }),
-    new ForkTsCheckerWebpackPlugin(),
-    new webpack.HotModuleReplacementPlugin()
-  ] : []
+  }
 }
+
+module.exports = config;
