@@ -1,23 +1,40 @@
-interface NodeStyle {
-  fontSize: number;
-  fontWeight: 'bold' | 'normal';
-  fontStyle: 'italic' | 'normal';
-  color: string;
-  background: string;
-  border: string;
-  borderRadius: number;
-}
+import { NodeStyle } from "./types";
 
 export const NODE_STYLES: { [key: string]: NodeStyle } = {
   ROOT: {
-    fontSize: 32,
-    fontWeight: 'bold',
+    fontSize: 28,
+    fontFamily: 'Arial',
+    fontWeight: '300',
     fontStyle: 'normal',
     color: '#fff',
-    background: '#0000ff',
-    border: '2px solid #000',
-    borderRadius: 6
+    background: '#666666',
+    borderWidth: 4,
+    borderColor: '#000',
+    borderRadius: 6,
+    padding: 12
+  },
+  PRIMARY: {
+    fontSize: 18,
+    fontFamily: 'Arial',
+    fontWeight: 'normal',
+    fontStyle: 'normal',
+    color: '#000',
+    background: '#fff',
+    borderWidth: 2,
+    borderColor: '#000',
+    borderRadius: 4,
+    padding: 8
+  },
+  SECONDARY: {
+    fontSize: 14,
+    fontFamily: 'Arial',
+    fontWeight: 'normal',
+    fontStyle: 'normal',
+    color: '#000',
+    background: 'transparent',
+    borderWidth: 0,
+    borderColor: '#000',
+    borderRadius: 0,
+    padding: 4
   } 
 }
-
-export type NodeType = 'ROOT' | 'PRIMARY' | 'SECONDARY';

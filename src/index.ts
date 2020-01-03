@@ -1,7 +1,7 @@
-export default class MindGraph {
-  id: number
+import MindMap from "./mind-map/MindMap";
 
-  constructor() {
-    this.id = 1;
-  }
-}
+const mindGraph = {
+  MindMap: MindMap
+};
+
+export default mindGraph;

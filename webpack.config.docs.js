@@ -1,6 +1,7 @@
 const webpack = require('webpack');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
+const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const path = require('path');
 
 const config = {
@@ -27,7 +28,8 @@ const config = {
   },
   plugins: [
     new HtmlWebpackPlugin({ template: './test/index.html' }),
-    new ForkTsCheckerWebpackPlugin({ tsconfig: path.resolve(__dirname, 'tsconfig.docs.json') })
+    new ForkTsCheckerWebpackPlugin({ tsconfig: path.resolve(__dirname, 'tsconfig.docs.json') }),
+    new CleanWebpackPlugin()
   ]
 }
 

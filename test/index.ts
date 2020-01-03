@@ -1,7 +1,7 @@
-import MindGraph from '../src/index';
+import mindGraph from '../src/index';
 
-const graph = new MindGraph();
-const appDom = document.getElementById('app');
-if (appDom) {
-  appDom.innerText = "MindGraph id: " + graph.id;
+const dom = document.getElementById('app');
+if (dom) {
+  const graph = new mindGraph.MindMap(dom);
+  graph.render();
 }
