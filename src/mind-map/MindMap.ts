@@ -1,6 +1,8 @@
 import TreeNode from '../common/TreeNode';
-import { NodeType, Vec2 } from './types';
-import { getScaledNodeStyle } from './utils';
+import { NodeType, Vec2 } from '../common/types';
+import _ from '../common/utils';
+import Graph from '../common/Graph';
+import CanvasControl from '../common/CanvasControl';
 
 export class MindMapNode extends TreeNode {
   type: NodeType;
@@ -11,7 +13,7 @@ export class MindMapNode extends TreeNode {
   }
 
   render(ctx: CanvasRenderingContext2D, position: Vec2, scale: number) {
-    const style = getScaledNodeStyle(this.type, scale);
+    const style = _.getScaledNodeStyle(this.type, scale);
     ctx.font = `${style.fontStyle} normal ${style.fontWeight} ${style.fontSize}px ${style.fontFamily}`;
     const textWidth = ctx.measureText(this.text).width;
     const textHeight = style.fontSize * 1.4;
@@ -38,7 +40,7 @@ export class MindMapNode extends TreeNode {
   }
 }
 
-export default class MindMap {
+export default class MindMap implements Graph {
   private root: MindMapNode;
   private index: { [key: number]: MindMapNode } = {};
   private parentDom: HTMLElement;
@@ -49,6 +51,7 @@ export default class MindMap {
   private translate: Vec2;
   private needsUpdate: boolean;
   private renderLoop: boolean;
+  private control: CanvasControl;
   
   private static nextId: number = 0;
 
@@ -73,8 +76,21 @@ export default class MindMap {
     this.ctx = ctx;
     this.scale = 1;
     this.translate = { x: 0, y: 0 };
+    this.control = new CanvasControl(this);
     this.needsUpdate = true;
     this.renderLoop = true;
+  }
+
+  getCanvas() {
+    return this.canvas;
+  }
+
+  getScale() {
+    return this.scale;
+  }
+
+  getTranslate() {
+    return this.translate;
   }
 
   setScale(scale: number) {
@@ -97,6 +113,12 @@ export default class MindMap {
     }
     this.innerRender();
     requestAnimationFrame(this.render);
+  }
+
+  dispose() {
+    this.renderLoop = false;
+    this.control.dispose();
+    this.canvas.remove();
   }
 
   private innerRender() {

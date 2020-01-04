@@ -1,7 +1,7 @@
 import { NodeType, NodeStyle } from "./types";
 import { NODE_STYLES } from "./constants";
 
-export function getScaledNodeStyle(type: NodeType, scale: number): NodeStyle {
+function getScaledNodeStyle(type: NodeType, scale: number): NodeStyle {
   const style = NODE_STYLES[type];
   return {
     ...style,
@@ -11,3 +11,9 @@ export function getScaledNodeStyle(type: NodeType, scale: number): NodeStyle {
     padding: style.padding * scale
   };
 }
+
+const _ = {
+  getScaledNodeStyle
+};
+
+export default _;
