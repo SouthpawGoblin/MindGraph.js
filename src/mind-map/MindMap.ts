@@ -1,44 +1,8 @@
-import TreeNode from '../common/TreeNode';
 import { NodeType, Vec2 } from '../common/types';
-import _ from '../common/utils';
 import Graph from '../common/Graph';
 import CanvasControl from '../common/CanvasControl';
-
-export class MindMapNode extends TreeNode {
-  type: NodeType;
-
-  constructor(id: number, type: NodeType, text?: string) {
-    super(id, text);
-    this.type = type;
-  }
-
-  render(ctx: CanvasRenderingContext2D, position: Vec2, scale: number) {
-    const style = _.getScaledNodeStyle(this.type, scale);
-    ctx.font = `${style.fontStyle} normal ${style.fontWeight} ${style.fontSize}px ${style.fontFamily}`;
-    const textWidth = ctx.measureText(this.text).width;
-    const textHeight = style.fontSize * 1.4;
-    const boxWidth = style.padding * 2 + textWidth;
-    const boxHeight = style.padding * 2 + textHeight;
-    const pos: Vec2 = {
-      x: position.x * scale - boxWidth / 2,
-      y: position.y * scale - boxHeight / 2
-    };
-    // TODO: support rounded rect
-    ctx.beginPath();
-    ctx.rect(pos.x, pos.y, boxWidth, boxHeight);
-    ctx.closePath();
-    ctx.fillStyle = style.background;
-    ctx.fill();
-    if (style.borderWidth > 0) {
-      ctx.strokeStyle = style.borderColor;
-      ctx.lineWidth = style.borderWidth; 
-      ctx.stroke();
-    }
-    ctx.beginPath();
-    ctx.fillStyle = style.color;
-    ctx.fillText(this.text, pos.x + style.padding, pos.y + style.padding + style.fontSize);
-  }
-}
+import MindMapNode from './MindMapNode';
+import TreeNode from '../common/TreeNode';
 
 export default class MindMap implements Graph {
   private root: MindMapNode;
@@ -52,12 +16,13 @@ export default class MindMap implements Graph {
   private needsUpdate: boolean;
   private renderLoop: boolean;
   private control: CanvasControl;
+  private treeDepth: number;
   
   private static nextId: number = 0;
 
   constructor(parentDom: HTMLElement, root?: MindMapNode) {
     this.parentDom = parentDom;
-    this.root = root || new MindMapNode(MindMap.nextId++, 'ROOT', 'Main Theme');
+    this.root = root || new MindMapNode(MindMap.nextId++, 1, 'ROOT', 'Main Theme');
     this.index[this.root.id] = this.root;
     const canvas = document.createElement('canvas');
     canvas.id = 'mind-graph-mind-map';
@@ -77,8 +42,13 @@ export default class MindMap implements Graph {
     this.scale = 1;
     this.translate = { x: 0, y: 0 };
     this.control = new CanvasControl(this);
+    this.treeDepth = this.root.depth;
     this.needsUpdate = true;
     this.renderLoop = true;
+  }
+
+  get rootId(): number {
+    return this.root.id;
   }
 
   getCanvas() {
@@ -107,6 +77,46 @@ export default class MindMap implements Graph {
     }
   }
 
+  // returns added node's id
+  addNode(parentId: number, text?: string): number {
+    const parent = this.index[parentId];
+    if (!parent) {
+      throw new Error('"addNode" failed, parent node not found.');
+    }
+    const nodeType: NodeType = parent.type === 'ROOT' ? 'PRIMARY' : 'SECONDARY';
+    const node = new MindMapNode(MindMap.nextId++, parent.depth + 1, nodeType, text);
+    parent.children.push(node);
+    node.parent = parent;
+    this.index[node.id] = node;
+    this.treeDepth = Math.max(this.treeDepth, node.depth);
+    this.needsUpdate = true;
+    return node.id;
+  }
+
+  // returns deleted node's parent id
+  deleteNode(nodeId: number): number {
+    const node = this.index[nodeId];
+    // ROOT node cannot be deleted
+    if (!node || !node.parent) {
+      return -1;
+    }
+    const idx = node.parent.children.findIndex(child => child.id === nodeId);
+    node.parent.children.splice(idx, 1);
+    delete this.index[nodeId];
+    // TODO: update treeDepth
+    this.needsUpdate = true;
+    return node.parent.id;
+  }
+
+  updateNode(nodeId: number, text: string) {
+    const node = this.index[nodeId];
+    if (!node) {
+      throw new Error('"updateNode" failed, node not found.');
+    }
+    node.text = text;
+    this.needsUpdate = true;
+  }
+
   render = () => {
     if (!this.renderLoop) {
       return;
@@ -131,7 +141,24 @@ export default class MindMap implements Graph {
       this.center.x + this.translate.x,
       this.center.y + this.translate.y
     );
-    this.root.render(this.ctx, { x: 0, y: 0 }, this.scale);
+    // BFS node tree rendering
+    const nodes: TreeNode[] = [this.root];
+    while (nodes.length > 0) {
+      const node = nodes.shift();
+      if (node) {
+        (node as MindMapNode).render(this.ctx, {
+          // TODO: calculate node position
+          x: Math.random() * 400 - 200,
+          y: Math.random() * 400 - 200
+        }, this.scale);
+        if (node.parent) {
+          // TODO: render link to the parent node
+        }
+        node.children.forEach(child => {
+          nodes.push(child);
+        });
+      }
+    }
     this.needsUpdate = false;
   }
 }
