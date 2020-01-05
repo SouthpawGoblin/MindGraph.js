@@ -1,4 +1,4 @@
-import { NodeStyle } from "./types";
+import { NodeStyle, LinkStyle } from "./types";
 
 export const NODE_STYLES: { [key: string]: NodeStyle } = {
   ROOT: {
@@ -37,4 +37,11 @@ export const NODE_STYLES: { [key: string]: NodeStyle } = {
     borderRadius: 0,
     padding: 4
   } 
+}
+
+export const LINK_STYLE: LinkStyle = {
+  lineWidth: 1,
+  lineColor: '#000',
+  cp1Ratio: 0.2,
+  cp2Ratio: 0.2
 }

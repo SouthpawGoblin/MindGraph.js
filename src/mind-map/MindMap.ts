@@ -3,6 +3,7 @@ import Graph from '../common/Graph';
 import CanvasControl from '../common/CanvasControl';
 import MindMapNode from './MindMapNode';
 import TreeNode from '../common/TreeNode';
+import _ from '../common/utils';
 
 export default class MindMap implements Graph {
   private root: MindMapNode;
@@ -22,7 +23,7 @@ export default class MindMap implements Graph {
 
   constructor(parentDom: HTMLElement, root?: MindMapNode) {
     this.parentDom = parentDom;
-    this.root = root || new MindMapNode(MindMap.nextId++, 1, 'ROOT', 'Main Theme');
+    this.root = root || new MindMapNode(MindMap.nextId++, 0, 'ROOT', 'Main Theme');
     this.index[this.root.id] = this.root;
     const canvas = document.createElement('canvas');
     canvas.id = 'mind-graph-mind-map';
@@ -103,7 +104,7 @@ export default class MindMap implements Graph {
     const idx = node.parent.children.findIndex(child => child.id === nodeId);
     node.parent.children.splice(idx, 1);
     delete this.index[nodeId];
-    // TODO: update treeDepth
+    this.treeDepth = _.getTreeDepth(this.root);
     this.needsUpdate = true;
     return node.parent.id;
   }
@@ -142,18 +143,18 @@ export default class MindMap implements Graph {
       this.center.y + this.translate.y
     );
     // BFS node tree rendering
+    let nodePos: Vec2 = { x: 0, y: 0 };
+    const deltaX = 200;
+    const deltaY = -100;
     const nodes: TreeNode[] = [this.root];
     while (nodes.length > 0) {
       const node = nodes.shift();
       if (node) {
         (node as MindMapNode).render(this.ctx, {
           // TODO: calculate node position
-          x: Math.random() * 400 - 200,
-          y: Math.random() * 400 - 200
+          x: nodePos.x + node.depth * deltaX,
+          y: nodePos.y + node.depth * deltaY
         }, this.scale);
-        if (node.parent) {
-          // TODO: render link to the parent node
-        }
         node.children.forEach(child => {
           nodes.push(child);
         });
