@@ -1,9 +1,13 @@
-import TreeNode from "../common/TreeNode";
+import BasicNode from "../common/BasicNode";
 import { NodeType, Vec2, Rect } from "../common/types";
 import _ from "../common/utils";
 
-export default class MindMapNode extends TreeNode {
+export default class MindMapNode extends BasicNode {
+  readonly depth: number;
+  parent: MindMapNode;
+  children: MindMapNode[];
   type: NodeType;
+  relPos: Vec2;
   boundingBox: Rect;
   leftHookPos: Vec2;
   rightHookPos: Vec2;

@@ -1,12 +1,12 @@
-import Graph from "./Graph";
+import BasicGraph from "./BasicGraph";
 
-export default class CanvasControl {
+export default class BasicCanvasControl {
 
   private leftDragging: boolean;
   private rightDragging: boolean;
-  private graph: Graph;
+  private graph: BasicGraph;
 
-  constructor(graph: Graph) {
+  constructor(graph: BasicGraph) {
     this.leftDragging = false;
     this.rightDragging = false;
     this.graph = graph;

@@ -29,7 +29,7 @@ function getTreeDepth(root: TreeNode): number {
     if (node.children.length === 0) {
       depths.push(node.depth);
     } else {
-      node.children.forEach(child => traverseLeaves(child, depths));
+      node.children.forEach((child: TreeNode) => traverseLeaves(child, depths));
     }
   }
 }

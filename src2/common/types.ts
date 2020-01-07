@@ -3,11 +3,6 @@ export interface Vec2 {
   y: number
 }
 
-export interface Size {
-  width: number,
-  height: number
-}
-
 export interface Rect {
   x: number,
   y: number,
@@ -27,6 +22,8 @@ export interface NodeStyle {
   borderRadius: number;
   padding: number;
 }
+
+export type NodeType = 'ROOT' | 'PRIMARY' | 'SECONDARY';
 
 export interface LinkStyle {
   lineWidth: number;

@@ -1,6 +1,6 @@
 import { Vec2 } from "./types";
 
-export default interface Graph {
+export default interface BasicGraph {
   getCanvas: () => HTMLCanvasElement;
   getScale: () => number;
   getTranslate: () => Vec2;
