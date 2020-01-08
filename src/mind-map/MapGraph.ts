@@ -159,24 +159,21 @@ export default class MapGraph {
       childrenTotalHeight += (info.node.children.length - 1) * MAP_VERTICAL_INTERVAL;
       const childPosX = info.pos.x + info.node.size.w + MAP_HORIZONTAL_INTERVAL;
       let childPosY = info.pos.y + info.node.size.h / 2 - childrenTotalHeight / 2;
-      info.node.children.forEach(child => {
+      info.node.children.forEach((child, index) => {
+        childPosY += child.verticalSpace() / 2 - child.size.h / 2;
         const childInfo: NodeInfo = {
           node: child,
           pos: { x: childPosX, y: childPosY }
         };
         this._renderLink(info, childInfo);
         nodeInfos.push(childInfo);
-        // FIXME: 每一层要重新计算y起始位置
-        childPosY += child.verticalSpace() + MAP_VERTICAL_INTERVAL;
+        childPosY += child.size.h / 2 + child.verticalSpace() / 2 + MAP_VERTICAL_INTERVAL;
       });
     }
     this._needsUpdate = false;
   }
 
   private _renderNode(info: NodeInfo) {
-    /*********** test */
-    info.node.text(info.node.verticalSpace().toString());
-    /********* test */
     const style = _.getScaledNodeStyle(info.node.type(), this._scale);
     const pos: Vec2 = {
       x: info.pos.x * this._scale,

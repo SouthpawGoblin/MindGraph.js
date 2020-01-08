@@ -13,7 +13,13 @@ if (dom) {
   graph.addNode(pri3Id, 'sec3');
   graph.addNode(pri3Id, 'sec3');
   graph.addNode(rootId, 'primary3');
-  graph.addNode(rootId, 'primary3');
+  const pri5Id = graph.addNode(rootId, 'primary3');
+  graph.addNode(pri5Id, 'sec5');
+  graph.addNode(pri5Id, 'sec5');
+  graph.addNode(pri5Id, 'sec5');
+  graph.addNode(pri5Id, 'sec5');
+  graph.addNode(pri5Id, 'sec5');
+  graph.addNode(pri5Id, 'sec5');
   graph.addNode(secId, 'secondary');
   const id = graph.addNode(secId, 'secondary2');
   graph.addNode(id, 'sec');
