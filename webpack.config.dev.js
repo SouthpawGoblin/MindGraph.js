@@ -3,6 +3,8 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const path = require('path');
 
+console.log(process.env.NODE_ENV);
+
 const config = {
   mode: 'development',
   entry: path.resolve(__dirname, 'test/index.ts'),

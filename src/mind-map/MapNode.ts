@@ -5,7 +5,7 @@ import { MAP_NODE_STYLES } from "./constants";
 
 export default class MapNode extends BasicNode {
   depth: number;
-  parent: MapNode;
+  parent: MapNode | null;
   children: MapNode[];
   private _type: MapNodeType;
   private _size: Size;
@@ -13,10 +13,13 @@ export default class MapNode extends BasicNode {
 
   constructor(id: number, type: MapNodeType, depth: number, text?: string, comment?: string) {
     super(id, text, comment);
+    this.parent = null;
+    this.children = [];
     this._type = type;
     this.depth = depth;
+    this._size = { w: 0, h: 0 };
     this._updateSize();
-    this._verticalSpace = this._size.height;
+    this._verticalSpace = this._size.h;
   }
 
   text(text?: string): string {
@@ -69,8 +72,8 @@ export default class MapNode extends BasicNode {
     const boxWidth = textWidth + pad;
     const boxHeight = textHeight + pad;
     this._size = {
-      width: boxWidth,
-      height: boxHeight
+      w: boxWidth,
+      h: boxHeight
     };
   }
 }

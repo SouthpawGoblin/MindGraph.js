@@ -4,15 +4,15 @@ export interface Vec2 {
 }
 
 export interface Size {
-  width: number,
-  height: number
+  w: number,
+  h: number
 }
 
 export interface Rect {
   x: number,
   y: number,
-  width: number,
-  height: number
+  w: number,
+  h: number
 }
 
 export interface NodeStyle {

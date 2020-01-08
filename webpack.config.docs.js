@@ -4,6 +4,8 @@ const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const path = require('path');
 
+console.log(process.env.NODE_ENV);
+
 const config = {
   mode: 'production',
   entry: path.resolve(__dirname, 'test/index.ts'),

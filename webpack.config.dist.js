@@ -2,7 +2,6 @@ const webpack = require('webpack');
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const path = require('path');
 
-const isDev = process.env.NODE_ENV === 'development';
 console.log(process.env.NODE_ENV);
 
 const config = {

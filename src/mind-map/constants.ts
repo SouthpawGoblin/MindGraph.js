@@ -1,6 +1,6 @@
 import { MapNodeStyles, MapLinkStyle } from "./types";
 
-export const MAP_HORIZONTAL_INTERVAL = 30;
+export const MAP_HORIZONTAL_INTERVAL = 40;
 export const MAP_VERTICAL_INTERVAL = 20;
 
 export const MAP_NODE_STYLES: MapNodeStyles = {
