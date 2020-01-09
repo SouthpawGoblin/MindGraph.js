@@ -1,16 +1,19 @@
-import BasicGraph from "./BasicGraph";
+import { Vec2 } from "./types";
 
 export default class BasicCanvasControl {
 
-  private leftDragging: boolean;
-  private rightDragging: boolean;
-  private graph: BasicGraph;
+  private _canvas: HTMLCanvasElement;
+  private _leftDragging: boolean;
+  private _rightDragging: boolean;
 
-  constructor(graph: BasicGraph) {
-    this.leftDragging = false;
-    this.rightDragging = false;
-    this.graph = graph;
-    const canvas = this.graph.getCanvas();
+  onScroll: (deltaY: number) => void = () => {};
+  onScale: (deltaScale: number) => void = () => {};
+  onPan: (deltaPos: Vec2) => void = () => {};
+
+  constructor(canvas: HTMLCanvasElement) {
+    this._canvas = canvas;
+    this._leftDragging = false;
+    this._rightDragging = false;
     canvas.style.cursor = 'grab';
     // zooming
     canvas.addEventListener('wheel', this.handleWheel)
@@ -24,7 +27,7 @@ export default class BasicCanvasControl {
   }
 
   dispose() {
-    const canvas = this.graph.getCanvas();
+    const canvas = this._canvas;
     canvas.style.cursor = 'default';
     // zooming
     canvas.removeEventListener('wheel', this.handleWheel)
@@ -38,44 +41,46 @@ export default class BasicCanvasControl {
   }
 
   private handleWheel = (ev: WheelEvent) => {
-    let scale = this.graph.getScale() + (ev.deltaY > 0 ? -0.05 : 0.05);
-    if (scale < 0.1) {
-      scale = 0.1;
-    } else if (scale > 4) {
-      scale = 4;
+    ev.preventDefault();
+    if (ev.ctrlKey) {
+      // scaling
+      const deltaScale = ev.deltaY > 0 ? -0.05 : 0.05;
+      this.onScale(deltaScale)
+    } else {
+      // scrolling
+      this.onScroll(ev.deltaY);
     }
-    this.graph.setScale(scale);
   }
 
   private handleMouseDown = (ev: MouseEvent) => {
     if (ev.button === 0) {
-      this.leftDragging = true
+      this._leftDragging = true
     } else if (ev.button === 2) {
-      this.rightDragging = true
+      this._rightDragging = true
     }
   }
 
   private handleMouseUp = (ev: MouseEvent) => {
     if (ev.button === 0) {
-      this.leftDragging = false
+      this._leftDragging = false
     } else if (ev.button === 2) {
-      this.rightDragging = false
+      this._rightDragging = false
     }
   }
 
   private handleMouseLeave = () => {
-    this.leftDragging = false
-    this.rightDragging = false
+    this._leftDragging = false
+    this._rightDragging = false
   }
 
   private handleMouseMove = (ev: MouseEvent) => {
-    if (this.leftDragging) {
-      const trans = this.graph.getTranslate();
-      this.graph.setTranslate({
-        x: trans.x + ev.movementX,
-        y: trans.y + ev.movementY
-      });
-    } else if (this.rightDragging) {
+    if (this._leftDragging) {
+      const deltaPos = {
+        x: ev.movementX,
+        y: ev.movementY
+      };
+      this.onPan(deltaPos);
+    } else if (this._rightDragging) {
       // TODO: right mouse dragging logic
     }
   }

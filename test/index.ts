@@ -19,11 +19,13 @@ if (dom) {
   graph.addNode(pri5Id, 'sec5');
   graph.addNode(pri5Id, 'sec5');
   graph.addNode(pri5Id, 'sec5');
-  graph.addNode(pri5Id, 'sec5');
+  const aa = graph.addNode(pri5Id, 'sec5');
   graph.addNode(secId, 'secondary');
   const id = graph.addNode(secId, 'secondary2');
   graph.addNode(id, 'sec');
+  const ii = graph.addNode(id, 'sec');
   graph.addNode(id, 'sec');
   graph.addNode(id, 'sec');
-  graph.addNode(id, 'sec');
+  graph.deleteNode(ii);
+  graph.deleteNode(aa);
 }

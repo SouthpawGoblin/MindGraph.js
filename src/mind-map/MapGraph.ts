@@ -48,7 +48,11 @@ export default class MapGraph {
     this._translate = { x: 0, y: 0 };
     this._needsUpdate = true;
     this._renderLoop = true;
-    // TODO: control
+    const control = new BasicCanvasControl(this._canvas);
+    control.onScroll = this._onScroll.bind(this);
+    control.onScale = this._onScale.bind(this);
+    control.onPan = this._onPan.bind(this);
+    this._control = control;
   }
 
   scale(scale?: number): number {
@@ -60,7 +64,7 @@ export default class MapGraph {
   }
 
   translate(translate?: Vec2): Vec2 {
-    if (typeof translate !== 'undefined' && translate.x !== this._translate.x && translate.y !== this._translate.y) {
+    if (typeof translate !== 'undefined' && (translate.x !== this._translate.x || translate.y !== this._translate.y)) {
       this._translate = translate;
       this._needsUpdate = true;
     }
@@ -81,8 +85,7 @@ export default class MapGraph {
     const node = new MapNode(MapGraph.nextNodeId++, nodeType, parent.depth + 1, text);
     parent.children.push(node);
     node.parent = parent;
-    let childrenTotalHeight = parent.children.reduce((total, child) => total + child.verticalSpace(), 0);
-    childrenTotalHeight += (parent.children.length - 1) * MAP_VERTICAL_INTERVAL;
+    const childrenTotalHeight = this._calcChildrenTotalHeight(parent);
     if (childrenTotalHeight > parent.verticalSpace()) {
       this._traceBackUpdateVerticalSpaces(parent, childrenTotalHeight - parent.verticalSpace());
     }
@@ -100,8 +103,14 @@ export default class MapGraph {
     }
     const idx = node.parent.children.findIndex(child => child.id === nodeId);
     node.parent.children.splice(idx, 1);
-    // FIXME: 
-    this._traceBackUpdateVerticalSpaces(node.parent, -(node.verticalSpace() + MAP_VERTICAL_INTERVAL));
+    const childrenTotalHeight = this._calcChildrenTotalHeight(node.parent);
+    if (childrenTotalHeight < node.parent.verticalSpace()) {
+      const deltaSpace = 
+        childrenTotalHeight > node.parent.size.h ? 
+        childrenTotalHeight - node.parent.verticalSpace() : 
+        node.parent.size.h - node.parent.verticalSpace();
+      this._traceBackUpdateVerticalSpaces(node.parent, deltaSpace);
+    }
     delete this._nodeIndex[nodeId];
     this._needsUpdate = true;
     return node.parent.id;
@@ -115,7 +124,6 @@ export default class MapGraph {
     const originalVerticalSpace = node.verticalSpace();
     node.text(text);
     const deltaSpace = node.verticalSpace() - originalVerticalSpace;
-    // FIXME: 
     this._traceBackUpdateVerticalSpaces(node.parent, deltaSpace);
     this._needsUpdate = true;
   }
@@ -135,6 +143,7 @@ export default class MapGraph {
   }
 
   private _innerRender() {
+    // FIXME: 渲染性能问题
     if (!this._needsUpdate) {
       return;
     }
@@ -235,6 +244,35 @@ export default class MapGraph {
     ctx.lineWidth = linkStyle.lineWidth;
     ctx.strokeStyle = linkStyle.lineColor;
     ctx.stroke();
+  }
+
+  private _onScroll(deltaY: number) {
+    const trans = this._translate;
+    this.translate({
+      x: trans.x,
+      y: trans.y - deltaY * 5
+    });
+  }
+
+  private _onScale(deltaScale: number) {
+    let scale = this._scale + deltaScale;
+    scale = scale > 4 ? 4 : scale;
+    scale = scale < 0.2 ? 0.2 : scale;
+    this.scale(scale);
+  }
+
+  private _onPan(deltaPos: Vec2) {
+    const trans = this._translate;
+    this.translate({
+      x: trans.x + deltaPos.x,
+      y: trans.y + deltaPos.y
+    });
+  }
+
+  private _calcChildrenTotalHeight(node: MapNode): number {
+    let childrenTotalHeight = node.children.reduce((total, child) => total + child.verticalSpace(), 0);
+    childrenTotalHeight += (node.children.length - 1) * MAP_VERTICAL_INTERVAL;
+    return childrenTotalHeight;
   }
 
   private _traceBackUpdateVerticalSpaces(node: MapNode, spaceDelta: number) {
