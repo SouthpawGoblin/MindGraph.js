@@ -98,7 +98,7 @@ export default class MapGraph {
   deleteNode(nodeId: number): number {
     const node = this._nodeIndex[nodeId];
     // ROOT node cannot be deleted
-    if (!node || node.type() === 'root') {
+    if (!node || !node.parent) {
       return -1;
     }
     const idx = node.parent.children.findIndex(child => child.id === nodeId);
@@ -124,13 +124,15 @@ export default class MapGraph {
     const originalVerticalSpace = node.verticalSpace();
     node.text(text);
     const deltaSpace = node.verticalSpace() - originalVerticalSpace;
-    this._traceBackUpdateVerticalSpaces(node.parent, deltaSpace);
+    if (node.parent) {
+      this._traceBackUpdateVerticalSpaces(node.parent, deltaSpace);
+    }
     this._needsUpdate = true;
   }
 
   dispose() {
     this._renderLoop = false;
-    this._control.dispose();
+    this._control?.dispose();
     this._canvas.remove();
   }
 
@@ -163,6 +165,9 @@ export default class MapGraph {
     }];
     while (nodeInfos.length > 0) {
       const info = nodeInfos.shift();
+      if (!info) {
+        continue;
+      }
       this._renderNode(info);
       let childrenTotalHeight = info.node.children.reduce((total, child) => total + child.verticalSpace(), 0);
       childrenTotalHeight += (info.node.children.length - 1) * MAP_VERTICAL_INTERVAL;
@@ -276,7 +281,7 @@ export default class MapGraph {
   }
 
   private _traceBackUpdateVerticalSpaces(node: MapNode, spaceDelta: number) {
-    let current = node;
+    let current: MapNode | null = node;
     while(current) {
       current.verticalSpace(current.verticalSpace() + spaceDelta);
       current = current.parent;

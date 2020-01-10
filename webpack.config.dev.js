@@ -28,9 +28,9 @@ const config = {
     ]
   },
   plugins: [
-    new HtmlWebpackPlugin({ template: './test/index.html' }),
-    new webpack.HotModuleReplacementPlugin(),
     new CleanWebpackPlugin(),
+    new HtmlWebpackPlugin({ template: './test/index.html' }),
+    new webpack.HotModuleReplacementPlugin()
   ]
 }
 

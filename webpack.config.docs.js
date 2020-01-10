@@ -29,9 +29,9 @@ const config = {
     ]
   },
   plugins: [
+    new CleanWebpackPlugin(),
     new HtmlWebpackPlugin({ template: './test/index.html' }),
-    new ForkTsCheckerWebpackPlugin({ tsconfig: path.resolve(__dirname, 'tsconfig.docs.json') }),
-    new CleanWebpackPlugin()
+    new ForkTsCheckerWebpackPlugin({ tsconfig: path.resolve(__dirname, 'tsconfig.docs.json') })
   ]
 }
 
