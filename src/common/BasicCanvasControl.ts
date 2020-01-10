@@ -1,7 +1,6 @@
 import { Vec2 } from "./types";
 
 export default class BasicCanvasControl {
-
   private _canvas: HTMLCanvasElement;
   private _leftDragging: boolean;
   private _rightDragging: boolean;

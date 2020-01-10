@@ -21,7 +21,7 @@ export default class MapGraph {
   private _translate: Vec2;
   private _needsUpdate: boolean;
   private _renderLoop: boolean;
-  private _control: BasicCanvasControl | null;
+  private _canvasControl: BasicCanvasControl | null;
 
   private static nextNodeId: number = 0;
 
@@ -52,7 +52,7 @@ export default class MapGraph {
     control.onScroll = this._onScroll.bind(this);
     control.onScale = this._onScale.bind(this);
     control.onPan = this._onPan.bind(this);
-    this._control = control;
+    this._canvasControl = control;
   }
 
   scale(scale?: number): number {
@@ -118,7 +118,7 @@ export default class MapGraph {
 
   dispose() {
     this._renderLoop = false;
-    this._control?.dispose();
+    this._canvasControl?.dispose();
     this._canvas.remove();
   }
 
@@ -256,12 +256,6 @@ export default class MapGraph {
       x: trans.x + deltaPos.x,
       y: trans.y + deltaPos.y
     });
-  }
-
-  private _calcChildrenTotalHeight(node: MapNode): number {
-    let childrenTotalHeight = node.children.reduce((total, child) => total + child.treeSpace().h, 0);
-    childrenTotalHeight += (node.children.length - 1) * MAP_VERTICAL_INTERVAL;
-    return childrenTotalHeight;
   }
 
   // call this every time a node's size/chilren changes
