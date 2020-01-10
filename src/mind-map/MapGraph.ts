@@ -85,10 +85,7 @@ export default class MapGraph {
     const node = new MapNode(MapGraph.nextNodeId++, nodeType, parent.depth + 1, text);
     parent.children.push(node);
     node.parent = parent;
-    const childrenTotalHeight = this._calcChildrenTotalHeight(parent);
-    if (childrenTotalHeight > parent.verticalSpace()) {
-      this._traceBackUpdateVerticalSpaces(parent, childrenTotalHeight - parent.verticalSpace());
-    }
+    this._traceBackUpdateSpaces(parent);
     this._nodeIndex[node.id] = node;
     this._needsUpdate = true;
     return node.id;
@@ -103,14 +100,7 @@ export default class MapGraph {
     }
     const idx = node.parent.children.findIndex(child => child.id === nodeId);
     node.parent.children.splice(idx, 1);
-    const childrenTotalHeight = this._calcChildrenTotalHeight(node.parent);
-    if (childrenTotalHeight < node.parent.verticalSpace()) {
-      const deltaSpace = 
-        childrenTotalHeight > node.parent.size.h ? 
-        childrenTotalHeight - node.parent.verticalSpace() : 
-        node.parent.size.h - node.parent.verticalSpace();
-      this._traceBackUpdateVerticalSpaces(node.parent, deltaSpace);
-    }
+    this._traceBackUpdateSpaces(node.parent);
     delete this._nodeIndex[nodeId];
     this._needsUpdate = true;
     return node.parent.id;
@@ -121,12 +111,8 @@ export default class MapGraph {
     if (!node) {
       throw new Error('"updateNode" failed, node not found.');
     }
-    const originalVerticalSpace = node.verticalSpace();
     node.text(text);
-    const deltaSpace = node.verticalSpace() - originalVerticalSpace;
-    if (node.parent) {
-      this._traceBackUpdateVerticalSpaces(node.parent, deltaSpace);
-    }
+    this._traceBackUpdateSpaces(node);
     this._needsUpdate = true;
   }
 
@@ -169,19 +155,17 @@ export default class MapGraph {
         continue;
       }
       this._renderNode(info);
-      let childrenTotalHeight = info.node.children.reduce((total, child) => total + child.verticalSpace(), 0);
-      childrenTotalHeight += (info.node.children.length - 1) * MAP_VERTICAL_INTERVAL;
       const childPosX = info.pos.x + info.node.size.w + MAP_HORIZONTAL_INTERVAL;
-      let childPosY = info.pos.y + info.node.size.h / 2 - childrenTotalHeight / 2;
-      info.node.children.forEach((child, index) => {
-        childPosY += child.verticalSpace() / 2 - child.size.h / 2;
+      let childPosY = info.pos.y + info.node.size.h / 2 - info.node.treeSpace().h / 2;
+      info.node.children.forEach((child) => {
+        childPosY += child.treeSpace().h / 2 - child.size.h / 2;
         const childInfo: NodeInfo = {
           node: child,
           pos: { x: childPosX, y: childPosY }
         };
         this._renderLink(info, childInfo);
         nodeInfos.push(childInfo);
-        childPosY += child.size.h / 2 + child.verticalSpace() / 2 + MAP_VERTICAL_INTERVAL;
+        childPosY += child.size.h / 2 + child.treeSpace().h / 2 + MAP_VERTICAL_INTERVAL;
       });
     }
     this._needsUpdate = false;
@@ -275,16 +259,36 @@ export default class MapGraph {
   }
 
   private _calcChildrenTotalHeight(node: MapNode): number {
-    let childrenTotalHeight = node.children.reduce((total, child) => total + child.verticalSpace(), 0);
+    let childrenTotalHeight = node.children.reduce((total, child) => total + child.treeSpace().h, 0);
     childrenTotalHeight += (node.children.length - 1) * MAP_VERTICAL_INTERVAL;
     return childrenTotalHeight;
   }
 
-  private _traceBackUpdateVerticalSpaces(node: MapNode, spaceDelta: number) {
-    let current: MapNode | null = node;
-    while(current) {
-      current.verticalSpace(current.verticalSpace() + spaceDelta);
-      current = current.parent;
+  // call this every time a node's size/chilren changes
+  private _traceBackUpdateSpaces(node: MapNode) {
+    const oldSpace = node.treeSpace();
+    let childrenMaxWidth = -Infinity;
+    let childrenTotalHeight = node.children.reduce((total, child) => {
+      if (child.size.w > childrenMaxWidth) {
+        childrenMaxWidth = child.size.w;
+      }
+      return total + child.treeSpace().h;
+    }, 0);
+    childrenTotalHeight += (node.children.length - 1) * MAP_VERTICAL_INTERVAL;
+    if (childrenTotalHeight < node.size.h) {
+      childrenTotalHeight = node.size.h;
+    }
+    let deltaWidth = childrenMaxWidth - (oldSpace.w - node.size.w - MAP_HORIZONTAL_INTERVAL);
+    let deltaHeight = childrenTotalHeight - oldSpace.h;
+    if (deltaWidth !== 0 || deltaHeight !== 0) {
+      let current: MapNode | null = node;
+      while(current) {
+        current.treeSpace({
+          w: current.treeSpace().w + deltaWidth,
+          h: current.treeSpace().h + deltaHeight
+        });
+        current = current.parent;
+      }
     }
   }
 }

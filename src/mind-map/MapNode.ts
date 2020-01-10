@@ -9,7 +9,7 @@ export default class MapNode extends BasicNode {
   children: MapNode[];
   private _type: MapNodeType;
   private _size: Size;
-  private _verticalSpace: number;
+  private _treeSpace: Size;
 
   constructor(id: number, type: MapNodeType, depth: number, text?: string, comment?: string) {
     super(id, text, comment);
@@ -19,7 +19,10 @@ export default class MapNode extends BasicNode {
     this.depth = depth;
     this._size = { w: 0, h: 0 };
     this._updateSize();
-    this._verticalSpace = this._size.h;
+    this._treeSpace = {
+      w: this._size.w,
+      h: this._size.h
+    };
   }
 
   text(text?: string): string {
@@ -46,11 +49,17 @@ export default class MapNode extends BasicNode {
     return this._type;
   }
 
-  verticalSpace(height?: number) {
-    if (typeof height !== 'undefined' && height !== this._verticalSpace) {
-      this._verticalSpace = height;
+  treeSpace(space?: Size) {
+    if (typeof space !== 'undefined' && (space.w !== this._treeSpace.w || space.h !== this._treeSpace.h)) {
+      this._treeSpace = {
+        w: space.w,
+        h: space.h
+      };
     }
-    return this._verticalSpace;
+    return {
+      w: this._treeSpace.w,
+      h: this._treeSpace.h
+    };
   }
 
   get size(): Size {

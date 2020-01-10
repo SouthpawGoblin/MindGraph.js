@@ -6,7 +6,8 @@ if (dom) {
   graph.render();
   const rootId = graph.rootId;
   const secId = graph.addNode(rootId, 'primary');
-  graph.addNode(rootId, 'primary2');
+  const p2 = graph.addNode(rootId, 'primary2');
+  graph.addNode(p2, 'sec2');
   graph.addNode(rootId, 'primary3');
   const pri3Id = graph.addNode(rootId, 'primary3');
   graph.addNode(pri3Id, 'sec3');
@@ -28,4 +29,6 @@ if (dom) {
   graph.addNode(id, 'sec');
   graph.deleteNode(ii);
   graph.deleteNode(aa);
+  graph.updateNode(rootId, 'rrrrrrrrrrrrrrrrrrrrrrrrrrrr');
+  graph.updateNode(secId, 'pppppppppppppppppp');
 }
