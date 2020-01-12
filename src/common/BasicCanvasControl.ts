@@ -14,29 +14,34 @@ export default class BasicCanvasControl {
     this._leftDragging = false;
     this._rightDragging = false;
     canvas.style.cursor = 'grab';
-    // zooming
-    canvas.addEventListener('wheel', this.handleWheel)
-    // panning
-    canvas.addEventListener('mousedown', this.handleMouseDown)
-    canvas.addEventListener('mouseup', this.handleMouseUp)
-    canvas.addEventListener('mouseleave', this.handleMouseLeave)
-    canvas.addEventListener('mousemove', this.handleMouseMove)
-    // prevent default context menu when rotating
-    canvas.addEventListener('contextmenu', this.handleContextMenu)
+    this._register();
   }
 
   dispose() {
     const canvas = this._canvas;
     canvas.style.cursor = 'default';
     // zooming
-    canvas.removeEventListener('wheel', this.handleWheel)
+    canvas.removeEventListener('wheel', this.handleWheel);
     // panning
-    canvas.removeEventListener('mousedown', this.handleMouseDown)
-    canvas.removeEventListener('mouseup', this.handleMouseUp)
-    canvas.removeEventListener('mouseleave', this.handleMouseLeave)
-    canvas.removeEventListener('mousemove', this.handleMouseMove)
+    canvas.removeEventListener('mousedown', this.handleMouseDown);
+    canvas.removeEventListener('mouseup', this.handleMouseUp);
+    canvas.removeEventListener('mouseleave', this.handleMouseLeave);
+    canvas.removeEventListener('mousemove', this.handleMouseMove);
     // prevent default context menu when rotating
-    canvas.removeEventListener('contextmenu', this.handleContextMenu)
+    canvas.removeEventListener('contextmenu', this.handleContextMenu);
+  }
+
+  private _register() {
+    const canvas = this._canvas;
+    // zooming
+    canvas.addEventListener('wheel', this.handleWheel);
+    // panning
+    canvas.addEventListener('mousedown', this.handleMouseDown);
+    canvas.addEventListener('mouseup', this.handleMouseUp);
+    canvas.addEventListener('mouseleave', this.handleMouseLeave);
+    canvas.addEventListener('mousemove', this.handleMouseMove);
+    // prevent default context menu when rotating
+    canvas.addEventListener('contextmenu', this.handleContextMenu);
   }
 
   private handleWheel = (ev: WheelEvent) => {
