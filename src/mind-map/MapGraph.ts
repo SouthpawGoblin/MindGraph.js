@@ -3,7 +3,7 @@ import { Vec2, Rect, Size } from "../common/types";
 import BasicCanvasControl from "../common/BasicCanvasControl";
 import _ from './utils';
 import { MapNodeType } from "./types";
-import { MAP_VERTICAL_INTERVAL, MAP_HORIZONTAL_INTERVAL } from "./constants";
+import { MAP_VERTICAL_INTERVAL, MAP_HORIZONTAL_INTERVAL, MAP_SELECTION_STYLE } from "./constants";
 
 export default class MapGraph {
   protected _root: MapNode;
@@ -52,6 +52,7 @@ export default class MapGraph {
     control.onPan = this._onPan.bind(this);
     this._canvasControl = control;
     this._lastSelectedNodeId = -1;
+    this._registerInteractions();
   }
 
   scale(scale?: number): number {
@@ -121,7 +122,7 @@ export default class MapGraph {
   dispose() {
     this._renderLoop = false;
     this._canvasControl?.dispose();
-    this._disposePicking();
+    this._unregisterInteractions();
     this._canvas.remove();
   }
 
@@ -180,6 +181,7 @@ export default class MapGraph {
         });
       }
     }
+    this._renderSelection();
     this._needsRerender = false;
     this._needsReposition = false;
   }
@@ -221,7 +223,6 @@ export default class MapGraph {
     ctx.font = `${style.fontStyle} normal ${style.fontWeight} ${style.fontSize}px ${style.fontFamily}`;
     ctx.fillStyle = style.color;
     ctx.fillText(node.text(), pos.x + style.padding + style.borderWidth, pos.y + style.padding + style.borderWidth + style.fontSize);
-    // TODO: render selected frame
   }
 
   private _renderLink(node1: MapNode, node2: MapNode) {
@@ -247,6 +248,35 @@ export default class MapGraph {
     ctx.lineWidth = linkStyle.lineWidth;
     ctx.strokeStyle = linkStyle.lineColor;
     ctx.stroke();
+  }
+
+  private _renderSelection() {
+    if (this._lastSelectedNodeId < 0) {
+      return;
+    }
+    const node = this._nodeIndices[this._lastSelectedNodeId];
+    const scaledPos: Vec2 = {
+      x: node.position().x * this._scale,
+      y: node.position().y * this._scale
+    };
+    const scaledSize: Size = {
+      w: node.size.w * this._scale,
+      h: node.size.h * this._scale
+    };
+    const style = _.getScaledSelectionStyle(this._scale);
+    const pos: Vec2 = {
+      x: scaledPos.x - style.padding - style.outlineWidth / 2,
+      y: scaledPos.y - style.padding - style.outlineWidth / 2
+    };
+    const size: Size = {
+      w: scaledSize.w + style.padding * 2 + style.outlineWidth,
+      h: scaledSize.h + style.padding * 2 + style.outlineWidth
+    };
+    const ctx = this._ctx;
+    ctx.beginPath();
+    ctx.strokeStyle = style.outlineColor;
+    ctx.lineWidth = style.outlineWidth;
+    ctx.strokeRect(pos.x, pos.y, size.w, size.h);
   }
 
   private _onScroll(deltaY: number) {
@@ -300,33 +330,51 @@ export default class MapGraph {
     }
   }
 
-  private _registerPicking() {
+  private _registerInteractions() {
     const canvas = this._canvas;
     canvas.addEventListener('click', this._onCanvasClick);
     // TODO:
   }
 
-  private _disposePicking() {
+  private _unregisterInteractions() {
     // TODO:
   }
 
   private _onCanvasClick = (ev: MouseEvent) => {
     const pos: Vec2 = {
-      x: ev.offsetX,
-      y: ev.offsetY
+      x: ev.offsetX - this._center.x - this._translate.x,
+      y: ev.offsetY - this._center.y - this._translate.y
     };
     const node = this._getNodeAtPosition(pos);
-    if (node) {
-      node.selected(true);
+    if (node && node.id === this._lastSelectedNodeId) {
+      return;
     }
     if (this._lastSelectedNodeId >= 0) {
       this._nodeIndices[this._lastSelectedNodeId].selected(false);
+      this._lastSelectedNodeId = -1;
+    }
+    if (node) {
+      node.selected(true);
+      this._lastSelectedNodeId = node.id;
     }
     this._needsRerender = true;
   }
 
   private _getNodeAtPosition(pos: Vec2): MapNode | null {
-    // TODO:
+    for (let id in this._nodeIndices) {
+      const node = this._nodeIndices[id];
+      const scaledLT: Vec2 = {
+        x: node.position().x * this._scale,
+        y: node.position().y * this._scale
+      };
+      const scaledRB: Vec2 = {
+        x: scaledLT.x + node.size.w * this._scale,
+        y: scaledLT.y + node.size.h * this._scale
+      };
+      if (pos.x >= scaledLT.x && pos.x <= scaledRB.x && pos.y >= scaledLT.y && pos.y <= scaledRB.y) {
+        return node;
+      }
+    }
     return null;
   }
 }

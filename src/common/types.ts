@@ -31,6 +31,10 @@ export interface NodeStyle {
 export interface LinkStyle {
   lineWidth: number;
   lineColor: string;
-  cp1Ratio: number;
-  cp2Ratio: number;
+}
+
+export interface SelectionStyle {
+  padding: number;
+  outlineColor: string;
+  outlineWidth: number;
 }

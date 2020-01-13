@@ -1,6 +1,6 @@
-import { MapNodeType, MapLinkStyle } from "./types";
+import { MapNodeType, MapLinkStyle, MapSelectionStyle } from "./types";
 import { NodeStyle } from "../common/types";
-import { MAP_NODE_STYLES, MAP_LINK_STYLE } from "./constants";
+import { MAP_NODE_STYLES, MAP_LINK_STYLE, MAP_SELECTION_STYLE } from "./constants";
 import MapGraph from "./MapGraph";
 
 function getScaledNodeStyle(type: MapNodeType, scale: number): NodeStyle {
@@ -21,9 +21,18 @@ function getScaledLinkStyle(scale: number): MapLinkStyle {
   }
 }
 
+function getScaledSelectionStyle(scale: number): MapSelectionStyle {
+  return {
+    ...MAP_SELECTION_STYLE,
+    padding: MAP_SELECTION_STYLE.padding * scale,
+    outlineWidth: MAP_SELECTION_STYLE.outlineWidth * scale
+  };
+}
+
 const _ = {
   getScaledNodeStyle,
-  getScaledLinkStyle
+  getScaledLinkStyle,
+  getScaledSelectionStyle
 };
 
 export default _;

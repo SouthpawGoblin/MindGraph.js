@@ -1,4 +1,4 @@
-import { NodeStyle, LinkStyle } from "../common/types";
+import { NodeStyle, LinkStyle, SelectionStyle } from "../common/types";
 
 export type MapNodeType = 'root' | 'primary' | 'secondary';
 
@@ -12,3 +12,5 @@ export interface MapLinkStyle extends LinkStyle {
   cp1Ratio: number;
   cp2Ratio: number;
 }
+
+export interface MapSelectionStyle extends SelectionStyle {}

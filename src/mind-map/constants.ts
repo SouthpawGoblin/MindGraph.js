@@ -1,4 +1,4 @@
-import { MapNodeStyles, MapLinkStyle } from "./types";
+import { MapNodeStyles, MapLinkStyle, MapSelectionStyle } from "./types";
 
 export const MAP_HORIZONTAL_INTERVAL = 40;
 export const MAP_VERTICAL_INTERVAL = 20;
@@ -47,4 +47,10 @@ export const MAP_LINK_STYLE: MapLinkStyle = {
   lineColor: '#000',
   cp1Ratio: 0.2,
   cp2Ratio: 0.2
+}
+
+export const MAP_SELECTION_STYLE: MapSelectionStyle = {
+  padding: 4,
+  outlineColor: '#5bc2e7',
+  outlineWidth: 4
 }
