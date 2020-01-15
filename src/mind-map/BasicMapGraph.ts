@@ -16,7 +16,7 @@ export default class BasicMapGraph {
   protected _needsRerender: boolean;
   protected _needsReposition: boolean;
   protected _renderLoop: boolean;
-  protected _lastSelectedNodeId: number;
+  protected _selectedNodeId: number;
 
   protected static nextNodeId: number = 0;
 
@@ -44,7 +44,7 @@ export default class BasicMapGraph {
     this._needsRerender = true;
     this._needsReposition = true;
     this._renderLoop = true;
-    this._lastSelectedNodeId = -1;
+    this._selectedNodeId = -1;
   }
 
   scale(scale?: number): number {
@@ -124,7 +124,7 @@ export default class BasicMapGraph {
     requestAnimationFrame(this.render);
   }
 
-  private _innerRender() {
+  protected _innerRender() {
     if (!this._needsRerender) {
       return;
     }
@@ -134,6 +134,10 @@ export default class BasicMapGraph {
       this._center.x + this._translate.x,
       this._center.y + this._translate.y
     );
+
+    // invoke hook
+    this._beforGraphRender();
+
     // BFS node tree rendering
     if (this._needsReposition) {
       this._root.position({
@@ -171,10 +175,19 @@ export default class BasicMapGraph {
         });
       }
     }
-    this._renderSelection();
+
+    // invoke hook
+    this._afterGraphRender();
+
     this._needsRerender = false;
     this._needsReposition = false;
   }
+
+  // hook for subclasses to override
+  protected _beforGraphRender() {}
+
+  // hook for subclasses to override
+  protected _afterGraphRender() {}
 
   private _renderNode(node: MapNode) {
     const style = _.getScaledNodeStyle(node.type(), this._scale);
@@ -238,35 +251,6 @@ export default class BasicMapGraph {
     ctx.lineWidth = linkStyle.lineWidth;
     ctx.strokeStyle = linkStyle.lineColor;
     ctx.stroke();
-  }
-
-  private _renderSelection() {
-    if (this._lastSelectedNodeId < 0) {
-      return;
-    }
-    const node = this._nodeIndices[this._lastSelectedNodeId];
-    const scaledPos: Vec2 = {
-      x: node.position().x * this._scale,
-      y: node.position().y * this._scale
-    };
-    const scaledSize: Size = {
-      w: node.size.w * this._scale,
-      h: node.size.h * this._scale
-    };
-    const style = _.getScaledSelectionStyle(this._scale);
-    const pos: Vec2 = {
-      x: scaledPos.x - style.padding - style.outlineWidth / 2,
-      y: scaledPos.y - style.padding - style.outlineWidth / 2
-    };
-    const size: Size = {
-      w: scaledSize.w + style.padding * 2 + style.outlineWidth,
-      h: scaledSize.h + style.padding * 2 + style.outlineWidth
-    };
-    const ctx = this._ctx;
-    ctx.beginPath();
-    ctx.strokeStyle = style.outlineColor;
-    ctx.lineWidth = style.outlineWidth;
-    ctx.strokeRect(pos.x, pos.y, size.w, size.h);
   }
 
   // call this every time a node's size/chilren changes
