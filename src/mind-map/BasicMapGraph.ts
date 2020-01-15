@@ -18,6 +18,7 @@ export default class BasicMapGraph {
   protected _needsReposition: boolean;
   protected _renderLoop: boolean;
   protected _selectedNodeId: number;
+  protected _copiedNode: MapNode | null;
 
   protected static nextNodeId: number = 0;
 
@@ -52,6 +53,7 @@ export default class BasicMapGraph {
     this._needsReposition = true;
     this._renderLoop = true;
     this._selectedNodeId = -1;
+    this._copiedNode = null;
   }
 
   scale(scale?: number): number {
@@ -80,7 +82,7 @@ export default class BasicMapGraph {
     if (!parent) {
       throw new Error('"addNode" failed, parent node not found.');
     }
-    const nodeType: MapNodeType = parent.type() === 'root' ? 'primary' : 'secondary';
+    const nodeType: MapNodeType = _.getChildNodeType(parent.type());
     const node = new MapNode(BasicMapGraph.nextNodeId++, nodeType, parent.depth + 1, text);
     parent.children.push(node);
     node.parent = parent;
@@ -118,9 +120,45 @@ export default class BasicMapGraph {
     this._needsReposition = true;
   }
 
+  copyNode(nodeId: number) {
+    // FIXME: clone node
+    const node = this._nodeIndices[nodeId];
+    if (!node) {
+      return;
+    }
+    this._copiedNode = node;
+  }
+
+  cutNode(nodeId: number) {
+    this.copyNode(nodeId);
+    this.deleteNode(nodeId);
+  }
+
+  pasteNode(parentNodeId: number) {
+    if (!this._copiedNode) {
+      return;
+    }
+    const queue: MapNode[] = [this._copiedNode];
+    const parentMap: { [key: number]: number } = {};
+    while (queue.length > 0) {
+      const node = queue.shift();
+      if (!node) {
+        continue;
+      }
+      let parentId = parentNodeId;
+      if (node.parent && parentMap.hasOwnProperty(node.parent.id)) {
+        parentId = parentMap[node.parent.id];
+      }
+      console.log(parentId);
+      const id = this.addNode(parentId, node.text());
+      parentMap[node.id] = id;
+      node.children.forEach(child => queue.push(child));
+    }
+  }
+
   dispose() {
     this._renderLoop = false;
-    this._canvas.remove();
+    this._dom.remove();
   }
 
   render = () => {
