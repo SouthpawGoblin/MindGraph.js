@@ -2,6 +2,7 @@ import BasicMapGraph from "./BasicMapGraph";
 import { Vec2, Size } from "../common/types";
 import MapNode from "./MapNode";
 import _ from "./utils";
+import { MAP_NODE_STYLES } from "./constants";
 
 /**
  * BasicMapGraph with canvas interactions
@@ -66,7 +67,7 @@ export default class MapGraph extends BasicMapGraph {
       const deltaScale = ev.deltaY > 0 ? -0.05 : 0.05;
       let scale = this._scale + deltaScale;
       scale = scale > 4 ? 4 : scale;
-      scale = scale < 0.2 ? 0.2 : scale;
+      scale = scale < 0.5 ? 0.5 : scale;
       this.scale(scale);
     } else {
       // scrolling
@@ -80,10 +81,10 @@ export default class MapGraph extends BasicMapGraph {
 
   private _handleMouseDown = (ev: MouseEvent) => {
     if (ev.button === 0) {
-      const pos: Vec2 = {
-        x: ev.offsetX - this._center.x - this._translate.x,
-        y: ev.offsetY - this._center.y - this._translate.y
-      };
+      const pos: Vec2 = this.domToCanvas({
+        x: ev.offsetX,
+        y: ev.offsetY
+      });
       const node = this._getNodeAtPosition(pos);
       if (node) {
         this._draggingNodeId = node.id;
@@ -143,7 +144,17 @@ export default class MapGraph extends BasicMapGraph {
   }
 
   private _handleDoubleClick = (ev: MouseEvent) => {
-
+    if (ev.button === 0) {
+      const pos: Vec2 = this.domToCanvas({
+        x: ev.offsetX,
+        y: ev.offsetY
+      });
+      const node = this._getNodeAtPosition(pos);
+      if (!node) {
+        return;
+      }
+      this._renderInput(node);
+    }
   }
 
   private _handleContextMenu = (ev: MouseEvent) => {
@@ -153,15 +164,12 @@ export default class MapGraph extends BasicMapGraph {
   private _getNodeAtPosition(pos: Vec2): MapNode | null {
     for (let id in this._nodeIndices) {
       const node = this._nodeIndices[id];
-      const scaledLT: Vec2 = {
-        x: node.position().x * this._scale,
-        y: node.position().y * this._scale
+      const lt: Vec2 = node.position();
+      const rb: Vec2 = {
+        x: lt.x + node.size.w,
+        y: lt.y + node.size.h
       };
-      const scaledRB: Vec2 = {
-        x: scaledLT.x + node.size.w * this._scale,
-        y: scaledLT.y + node.size.h * this._scale
-      };
-      if (pos.x >= scaledLT.x && pos.x <= scaledRB.x && pos.y >= scaledLT.y && pos.y <= scaledRB.y) {
+      if (pos.x >= lt.x && pos.x <= rb.x && pos.y >= lt.y && pos.y <= rb.y) {
         return node;
       }
     }
@@ -195,5 +203,37 @@ export default class MapGraph extends BasicMapGraph {
     ctx.strokeStyle = style.outlineColor;
     ctx.lineWidth = style.outlineWidth;
     ctx.strokeRect(pos.x, pos.y, size.w, size.h);
+  }
+
+  private _renderInput(node: MapNode) {
+    const style = MAP_NODE_STYLES[node.type()];
+    const textPadding = style.borderWidth;
+    const inputLT: Vec2 = this.canvasToDom({
+      x: node.position().x + textPadding,
+      y: node.position().y + textPadding,
+    });
+    const inputSize: Size = {
+      w: (node.size.w - textPadding * 2) * this._scale,
+      h: (node.size.h - textPadding * 2) * this._scale
+    };
+    const scaledStyle = _.getScaledNodeStyle(node.type(), this._scale);
+    const input = document.createElement('input');
+    input.value = node.text();
+    input.style.font = `${scaledStyle.fontStyle} normal ${scaledStyle.fontWeight} ${scaledStyle.fontSize}px ${scaledStyle.fontFamily}`;
+    input.style.position = 'absolute';
+    input.style.left = `${inputLT.x}px`;
+    input.style.top = `${inputLT.y}px`;
+    input.style.width = `${inputSize.w}px`;
+    input.style.minWidth = '40px';
+    input.style.height = `${inputSize.h}px`;
+    input.addEventListener('blur', (ev: FocusEvent) => {
+      const inputEle = ev.target as HTMLInputElement;
+      if (inputEle.value && inputEle.value !== node.text()) {
+        this.updateNode(node.id, inputEle.value);
+      }
+      inputEle.remove();
+    });
+    this._dom.appendChild(input);
+    input.focus();
   }
 }

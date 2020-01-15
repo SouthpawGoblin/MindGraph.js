@@ -7,6 +7,7 @@ import { MAP_VERTICAL_INTERVAL, MAP_HORIZONTAL_INTERVAL, MAP_SELECTION_STYLE } f
 export default class BasicMapGraph {
   protected _root: MapNode;
   protected _nodeIndices: { [key: number]: MapNode };
+  protected _dom: HTMLElement;
   protected _parentDom: HTMLElement;
   protected _canvas: HTMLCanvasElement;
   protected _ctx: CanvasRenderingContext2D;
@@ -25,10 +26,16 @@ export default class BasicMapGraph {
     this._root = new MapNode(BasicMapGraph.nextNodeId++, 'root', 0, 'Main Theme');
     this._nodeIndices = { [this._root.id]: this._root };
     const canvas = document.createElement('canvas');
-    canvas.id = 'mind-graph-map';
     canvas.width = this._parentDom.clientWidth;
     canvas.height = this._parentDom.clientHeight;
-    this._parentDom.appendChild(canvas);
+    const container = document.createElement('div');
+    container.id = 'mind-graph-map';
+    container.style.width = '100%';
+    container.style.height = '100%';
+    container.style.position = 'relative';
+    container.appendChild(canvas);
+    this._dom = container;
+    this._parentDom.appendChild(container);
     this._canvas = canvas;
     this._center = {
       x: this._canvas.width / 2,
@@ -122,6 +129,20 @@ export default class BasicMapGraph {
     }
     this._innerRender();
     requestAnimationFrame(this.render);
+  }
+
+  canvasToDom(point: Vec2): Vec2 {
+    return {
+      x: point.x * this._scale + this._center.x + this._translate.x,
+      y: point.y * this._scale + this._center.y + this._translate.y
+    };
+  }
+
+  domToCanvas(point: Vec2): Vec2 {
+    return {
+      x: (point.x - this._center.x - this._translate.x) / this._scale,
+      y: (point.y - this._center.y - this._translate.y) / this._scale
+    };
   }
 
   protected _innerRender() {
