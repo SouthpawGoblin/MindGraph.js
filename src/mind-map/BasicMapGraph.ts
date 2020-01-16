@@ -121,12 +121,11 @@ export default class BasicMapGraph {
   }
 
   copyNode(nodeId: number) {
-    // FIXME: clone node
     const node = this._nodeIndices[nodeId];
     if (!node) {
       return;
     }
-    this._copiedNode = node;
+    this._copiedNode = node.clone();
   }
 
   cutNode(nodeId: number) {

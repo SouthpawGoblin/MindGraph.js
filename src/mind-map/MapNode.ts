@@ -90,6 +90,18 @@ export default class MapNode extends BasicNode {
     return this._size;
   }
 
+  clone(): MapNode {
+    const clonedNode: MapNode = new MapNode(this.id, this._type, this.depth, this._text, this._comment);
+    clonedNode.children = [];
+    clonedNode.parent = null;
+    this.children.forEach(child => {
+      const clonedChild = child.clone();
+      clonedChild.parent = clonedNode;
+      clonedNode.children.push(clonedChild);
+    });
+    return clonedNode;
+  }
+
   private _updateSize() {
     const style = MAP_NODE_STYLES[this._type];
     const rulerCanvas = document.createElement('canvas');

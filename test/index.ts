@@ -9,7 +9,7 @@ if (dom) {
   const p2 = graph.addNode(rootId, 'primary2');
   graph.addNode(p2, 'sec2');
   graph.addNode(rootId, 'primary3');
-  const pri3Id = graph.addNode(rootId, 'primary3');
+  const pri3Id = graph.addNode(rootId, 'primary10');
   graph.addNode(pri3Id, 'sec3');
   graph.addNode(pri3Id, 'sec3');
   graph.addNode(pri3Id, 'sec3');
@@ -31,6 +31,8 @@ if (dom) {
   graph.deleteNode(aa);
   graph.updateNode(rootId, 'rrrrrrrrrrrrrrrrrrrrrrrrrrrr');
   graph.updateNode(secId, 'pppppppppppppppppp');
-  graph.copyNode(bb);
+  graph.copyNode(rootId);
   graph.pasteNode(id);
+  graph.cutNode(pri3Id);
+  graph.pasteNode(bb);
 }
