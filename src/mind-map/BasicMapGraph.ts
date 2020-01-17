@@ -76,15 +76,27 @@ export default class BasicMapGraph {
     return this._root.id;
   }
 
+  selectedNode(id?: number): MapNode | null {
+    if (typeof id !== 'undefined' && id !== this._selectedNodeId) {
+      this._selectedNodeId = id;
+      this._needsRerender = true;
+    }
+    return this._selectedNodeId < 0 ? null : this._nodeIndices[this._selectedNodeId];
+  }
+
   // returns added node's id
-  addNode(parentId: number, text?: string): number {
+  addNode(parentId: number, text?: string, position?: number): number {
     const parent = this._nodeIndices[parentId];
     if (!parent) {
       throw new Error('"addNode" failed, parent node not found.');
     }
     const nodeType: MapNodeType = _.getChildNodeType(parent.type());
     const node = new MapNode(BasicMapGraph.nextNodeId++, nodeType, parent.depth + 1, text);
-    parent.children.push(node);
+    if (typeof position === 'number' && position >= 0 && position <= parent.children.length) {
+      parent.children.splice(position, 0, node);
+    } else {
+      parent.children.push(node);
+    }
     node.parent = parent;
     this._traceBackUpdateSpaces(parent);
     this._nodeIndices[node.id] = node;
@@ -104,6 +116,10 @@ export default class BasicMapGraph {
     node.parent.children.splice(idx, 1);
     this._traceBackUpdateSpaces(node.parent);
     delete this._nodeIndices[nodeId];
+    // TODO: 删除后将选中节点下移，若已是最后一个则上移，若无兄弟节点则移至父节点
+    if (this._selectedNodeId === nodeId) {
+      this.selectedNode(-1);
+    }
     this._needsRerender = true;
     this._needsReposition = true;
     return node.parent.id;
@@ -148,7 +164,6 @@ export default class BasicMapGraph {
       if (node.parent && parentMap.hasOwnProperty(node.parent.id)) {
         parentId = parentMap[node.parent.id];
       }
-      console.log(parentId);
       const id = this.addNode(parentId, node.text());
       parentMap[node.id] = id;
       node.children.forEach(child => queue.push(child));
@@ -233,6 +248,7 @@ export default class BasicMapGraph {
         });
       }
     }
+    this._renderSelection();
 
     // invoke hook
     this._afterGraphRender();
@@ -309,6 +325,35 @@ export default class BasicMapGraph {
     ctx.lineWidth = linkStyle.lineWidth;
     ctx.strokeStyle = linkStyle.lineColor;
     ctx.stroke();
+  }
+
+  private _renderSelection() {
+    if (this._selectedNodeId < 0) {
+      return;
+    }
+    const node = this._nodeIndices[this._selectedNodeId];
+    const scaledPos: Vec2 = {
+      x: node.position().x * this._scale,
+      y: node.position().y * this._scale
+    };
+    const scaledSize: Size = {
+      w: node.size.w * this._scale,
+      h: node.size.h * this._scale
+    };
+    const style = _.getScaledSelectionStyle(this._scale);
+    const pos: Vec2 = {
+      x: scaledPos.x - style.padding - style.outlineWidth / 2,
+      y: scaledPos.y - style.padding - style.outlineWidth / 2
+    };
+    const size: Size = {
+      w: scaledSize.w + style.padding * 2 + style.outlineWidth,
+      h: scaledSize.h + style.padding * 2 + style.outlineWidth
+    };
+    const ctx = this._ctx;
+    ctx.beginPath();
+    ctx.strokeStyle = style.outlineColor;
+    ctx.lineWidth = style.outlineWidth;
+    ctx.strokeRect(pos.x, pos.y, size.w, size.h);
   }
 
   // call this every time a node's size/chilren changes

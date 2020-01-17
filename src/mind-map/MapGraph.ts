@@ -25,11 +25,6 @@ export default class MapGraph extends BasicMapGraph {
     super.dispose();
   }
 
-  // override
-  protected _afterGraphRender() {
-    this._renderSelection();
-  }
-
   private _registerInteractions() {
     const canvas = this._canvas;
     // scaling and scrolling
@@ -43,6 +38,8 @@ export default class MapGraph extends BasicMapGraph {
     canvas.addEventListener('dblclick', this._handleDoubleClick);
     // prevent default context menu when right click
     canvas.addEventListener('contextmenu', this._handleContextMenu);
+    // add, delete, copy, cut, paste...key related interactions
+    window.addEventListener('keyup', this._handleKeyUp);
   }
 
   private _unregisterInteractions() {
@@ -58,6 +55,8 @@ export default class MapGraph extends BasicMapGraph {
     canvas.removeEventListener('dblclick', this._handleDoubleClick);
     // prevent default context menu when right click
     canvas.removeEventListener('contextmenu', this._handleContextMenu);
+    // add, delete, copy, cut, paste...key related interactions
+    window.removeEventListener('keyup', this._handleKeyUp);
   }
   
   private _handleWheel = (ev: WheelEvent) => {
@@ -89,10 +88,9 @@ export default class MapGraph extends BasicMapGraph {
       if (node) {
         this._draggingNodeId = node.id;
       }
-      if (this._selectedNodeId >= 0 && (!node || node.id !== this._selectedNodeId)) {
-        this._nodeIndices[this._selectedNodeId].selected(false);
-        this._selectedNodeId = -1;
-        this._needsRerender = true;
+      const selectedNode = this.selectedNode();
+      if (selectedNode && (!node || node.id !== selectedNode.id)) {
+        this.selectedNode(-1);
       }
       this._mouseLeftDragging = true;
     } else if (ev.button === 2) {
@@ -126,10 +124,8 @@ export default class MapGraph extends BasicMapGraph {
     if (ev.button === 0) {
       if (this._draggingNodeId >= 0) {
         // TODO: possible node moving
-        this._nodeIndices[this._draggingNodeId].selected(true);
-        this._selectedNodeId = this._draggingNodeId;
+        this.selectedNode(this._draggingNodeId);
         this._draggingNodeId = -1;
-        this._needsRerender = true;
       }
       this._mouseLeftDragging = false;
     } else if (ev.button === 2) {
@@ -157,6 +153,67 @@ export default class MapGraph extends BasicMapGraph {
     }
   }
 
+  private _handleKeyUp = (ev: KeyboardEvent) => {
+    const selectedNode = this.selectedNode();
+    if (!selectedNode) {
+      return;
+    }
+    switch(ev.key) {
+      // TODO: support switch selection by arrow key, maybe need to use depth prop
+      case "ArrowDown":
+        break;
+      case "ArrowUp":
+        break;
+      case "ArrowLeft":
+        break;
+      case "ArrowRight":
+        break;
+      case "Enter": { // Enter: add sibling node, Ctrl+Enter: add child node
+        let newNodeId = -1;
+        if (ev.ctrlKey) {
+          newNodeId = this.addNode(selectedNode.id);
+        } else {
+          const parent = selectedNode.parent;
+          if (parent) {
+            const pos = parent.children.findIndex(child => child.id === selectedNode.id);
+            newNodeId = this.addNode(parent.id, undefined, pos >= 0 ? pos + 1 : undefined);
+          }
+        }
+        this.selectedNode(newNodeId);
+        // FIXME: 此时新节点未被渲染，还未获得位置信息，需要在renderDone之类的钩子里调用_renderInput
+        // this._renderInput(this.selectedNode());
+        break;
+      }
+      case "Delete": {
+        this.deleteNode(selectedNode.id);
+        break;
+      }
+      case "Escape": {  // remove selection
+        this.selectedNode(-1);
+        break;
+      }
+      case "c": {
+        if (ev.ctrlKey) { // copy
+          this.copyNode(selectedNode.id);
+        }
+        break;
+      }
+      case "x": {
+        if (ev.ctrlKey) { // cut
+          this.cutNode(selectedNode.id);
+        }
+        break;
+      }
+      case "v": {
+        if (ev.ctrlKey) { // paste
+          this.pasteNode(selectedNode.id);
+        }
+        break;
+      }
+      default: return;
+    }
+  }
+
   private _handleContextMenu = (ev: MouseEvent) => {
     ev.preventDefault();
   }
@@ -176,36 +233,10 @@ export default class MapGraph extends BasicMapGraph {
     return null;
   }
 
-  private _renderSelection() {
-    if (this._selectedNodeId < 0) {
+  private _renderInput(node: MapNode | null) {
+    if (!node) {
       return;
     }
-    const node = this._nodeIndices[this._selectedNodeId];
-    const scaledPos: Vec2 = {
-      x: node.position().x * this._scale,
-      y: node.position().y * this._scale
-    };
-    const scaledSize: Size = {
-      w: node.size.w * this._scale,
-      h: node.size.h * this._scale
-    };
-    const style = _.getScaledSelectionStyle(this._scale);
-    const pos: Vec2 = {
-      x: scaledPos.x - style.padding - style.outlineWidth / 2,
-      y: scaledPos.y - style.padding - style.outlineWidth / 2
-    };
-    const size: Size = {
-      w: scaledSize.w + style.padding * 2 + style.outlineWidth,
-      h: scaledSize.h + style.padding * 2 + style.outlineWidth
-    };
-    const ctx = this._ctx;
-    ctx.beginPath();
-    ctx.strokeStyle = style.outlineColor;
-    ctx.lineWidth = style.outlineWidth;
-    ctx.strokeRect(pos.x, pos.y, size.w, size.h);
-  }
-
-  private _renderInput(node: MapNode) {
     const style = MAP_NODE_STYLES[node.type()];
     const textPadding = style.borderWidth;
     const inputLT: Vec2 = this.canvasToDom({

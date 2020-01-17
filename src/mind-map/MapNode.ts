@@ -11,9 +11,9 @@ export default class MapNode extends BasicNode {
   private _size: Size;
   private _treeSpace: Size;
   private _position: Vec2;
-  private _selected: boolean;
 
   constructor(id: number, type: MapNodeType, depth: number, text?: string, comment?: string) {
+    text = text || 'New';
     super(id, text, comment);
     this.parent = null;
     this.children = [];
@@ -26,7 +26,6 @@ export default class MapNode extends BasicNode {
       h: this._size.h
     };
     this._position = { x: 0, y: 0 };
-    this._selected = false;
   }
 
   text(text?: string): string {
@@ -77,13 +76,6 @@ export default class MapNode extends BasicNode {
       x: this._position.x,
       y: this._position.y
     };
-  }
-
-  selected(flag?: boolean) {
-    if (typeof flag !== 'undefined') {
-      this._selected = flag;
-    }
-    return this._selected;
   }
 
   get size(): Size {
