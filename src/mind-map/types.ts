@@ -14,3 +14,16 @@ export interface MapLinkStyle extends LinkStyle {
 }
 
 export interface MapSelectionStyle extends SelectionStyle {}
+
+export interface MapNodeInfo {
+  id: number;
+  text: string;
+  comment: string;
+  parentId: number | null;
+  childrenId: number[];
+}
+
+export interface MapJson {
+  rootId: number;
+  [key: number]: MapNodeInfo
+}

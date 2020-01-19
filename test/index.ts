@@ -35,4 +35,6 @@ if (dom) {
   graph.pasteNode(id);
   graph.cutNode(pri3Id);
   graph.pasteNode(bb);
+
+  console.log(graph.toJson());
 }

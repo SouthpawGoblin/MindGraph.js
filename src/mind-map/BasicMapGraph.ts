@@ -1,8 +1,8 @@
 import MapNode from "./MapNode";
 import { Vec2, Rect, Size } from "../common/types";
 import _ from './utils';
-import { MapNodeType } from "./types";
-import { MAP_VERTICAL_INTERVAL, MAP_HORIZONTAL_INTERVAL, MAP_SELECTION_STYLE } from "./constants";
+import { MapNodeType, MapJson } from "./types";
+import { MAP_VERTICAL_INTERVAL, MAP_HORIZONTAL_INTERVAL } from "./constants";
 
 export default class BasicMapGraph {
   protected _root: MapNode;
@@ -22,7 +22,7 @@ export default class BasicMapGraph {
 
   protected static nextNodeId: number = 0;
 
-  constructor(dom: HTMLElement) {
+  constructor(dom: HTMLElement, json?: MapJson) {
     this._parentDom = dom;
     this._root = new MapNode(BasicMapGraph.nextNodeId++, 'root', 0, 'Main Theme');
     this._nodeIndices = { [this._root.id]: this._root };
@@ -157,6 +157,7 @@ export default class BasicMapGraph {
     this.deleteNode(nodeId);
   }
 
+  // TODO: extract BFS traverse
   pasteNode(parentNodeId: number) {
     if (!this._copiedNode) {
       return;
@@ -203,6 +204,36 @@ export default class BasicMapGraph {
       x: (point.x - this._center.x - this._translate.x) / this._scale,
       y: (point.y - this._center.y - this._translate.y) / this._scale
     };
+  }
+
+  toJson(): MapJson {
+    const json: MapJson = {
+      rootId: this._root.id
+    };
+    const queue: MapNode[] = [this._root];
+    while (queue.length > 0) {
+      const node = queue.shift();
+      if (!node) {
+        continue;
+      }
+      json[node.id] = {
+        id: node.id,
+        text: node.text(),
+        comment: node.comment(),
+        parentId: node.parent ? node.parent.id : null,
+        childrenId: []
+      };
+      node.children.forEach(child => {
+        json[node.id].childrenId.push(child.id);
+        queue.push(child);
+      });
+    }
+    return json;
+  }
+
+  // TODO:
+  fromJson(json: MapJson): MapNode {
+
   }
 
   protected _innerRender() {
