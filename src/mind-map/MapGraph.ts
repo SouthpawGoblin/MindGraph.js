@@ -180,8 +180,7 @@ export default class MapGraph extends BasicMapGraph {
           }
         }
         this.selectedNode(newNodeId);
-        // FIXME: 此时新节点未被渲染，还未获得位置信息，需要在renderDone之类的钩子里调用_renderInput
-        // this._renderInput(this.selectedNode());
+        requestAnimationFrame(() => this._renderInput(this.selectedNode()));
         break;
       }
       case "Delete": {
@@ -258,13 +257,22 @@ export default class MapGraph extends BasicMapGraph {
     input.style.minWidth = '40px';
     input.style.height = `${inputSize.h}px`;
     input.addEventListener('blur', (ev: FocusEvent) => {
+      ev.stopPropagation();
       const inputEle = ev.target as HTMLInputElement;
       if (inputEle.value && inputEle.value !== node.text()) {
         this.updateNode(node.id, inputEle.value);
       }
       inputEle.remove();
     });
+    input.addEventListener('keyup', (ev: KeyboardEvent) => {
+      ev.stopPropagation();
+      if (ev.key === 'Enter' || ev.key === 'Escape') {
+        const inputEle = ev.target as HTMLInputElement;
+        inputEle.blur();
+      }
+    });
     this._dom.appendChild(input);
     input.focus();
+    input.select();
   }
 }

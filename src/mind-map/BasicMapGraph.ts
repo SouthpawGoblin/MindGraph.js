@@ -116,9 +116,17 @@ export default class BasicMapGraph {
     node.parent.children.splice(idx, 1);
     this._traceBackUpdateSpaces(node.parent);
     delete this._nodeIndices[nodeId];
-    // TODO: 删除后将选中节点下移，若已是最后一个则上移，若无兄弟节点则移至父节点
     if (this._selectedNodeId === nodeId) {
-      this.selectedNode(-1);
+      // change selection to siblings or parent
+      if (node.parent.children.length > 0) {
+        let childIndex = idx;
+        if (idx >= node.parent.children.length) {
+          childIndex--;
+        }
+        this._selectedNodeId = node.parent.children[childIndex].id;
+      } else {
+        this._selectedNodeId = node.parent.id;
+      }
     }
     this._needsRerender = true;
     this._needsReposition = true;
