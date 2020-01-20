@@ -19,7 +19,7 @@ export interface MapNodeInfo {
   id: number;
   text: string;
   comment: string;
-  parentId: number | null;
+  parentId: number;
   childrenId: number[];
 }
 

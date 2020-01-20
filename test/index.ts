@@ -36,5 +36,7 @@ if (dom) {
   graph.cutNode(pri3Id);
   graph.pasteNode(bb);
 
-  console.log(graph.toJson());
+  const json = graph.toJson();
+  console.log(json);
+  setTimeout(() => graph.loadJson(json), 3000);
 }

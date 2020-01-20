@@ -19,12 +19,11 @@ export default class BasicMapGraph {
   protected _renderLoop: boolean;
   protected _selectedNodeId: number;
   protected _copiedNode: MapNode | null;
-
-  protected static nextNodeId: number = 0;
+  protected _nextNodeId: number = 0;
 
   constructor(dom: HTMLElement, json?: MapJson) {
     this._parentDom = dom;
-    this._root = new MapNode(BasicMapGraph.nextNodeId++, 'root', 0, 'Main Theme');
+    this._root = new MapNode(this._nextNodeId++, 'root', 0, 'Main Theme');
     this._nodeIndices = { [this._root.id]: this._root };
     const canvas = document.createElement('canvas');
     canvas.width = this._parentDom.clientWidth;
@@ -91,7 +90,7 @@ export default class BasicMapGraph {
       throw new Error('"addNode" failed, parent node not found.');
     }
     const nodeType: MapNodeType = _.getChildNodeType(parent.type());
-    const node = new MapNode(BasicMapGraph.nextNodeId++, nodeType, parent.depth + 1, text);
+    const node = new MapNode(this._nextNodeId++, nodeType, parent.depth + 1, text);
     if (typeof position === 'number' && position >= 0 && position <= parent.children.length) {
       parent.children.splice(position, 0, node);
     } else {
@@ -162,21 +161,15 @@ export default class BasicMapGraph {
     if (!this._copiedNode) {
       return;
     }
-    const queue: MapNode[] = [this._copiedNode];
     const parentMap: { [key: number]: number } = {};
-    while (queue.length > 0) {
-      const node = queue.shift();
-      if (!node) {
-        continue;
-      }
+    this._copiedNode.traverse(node => {
       let parentId = parentNodeId;
       if (node.parent && parentMap.hasOwnProperty(node.parent.id)) {
         parentId = parentMap[node.parent.id];
       }
       const id = this.addNode(parentId, node.text());
       parentMap[node.id] = id;
-      node.children.forEach(child => queue.push(child));
-    }
+    });
   }
 
   dispose() {
@@ -210,30 +203,41 @@ export default class BasicMapGraph {
     const json: MapJson = {
       rootId: this._root.id
     };
-    const queue: MapNode[] = [this._root];
-    while (queue.length > 0) {
-      const node = queue.shift();
-      if (!node) {
-        continue;
-      }
+    this._root.traverse(node => {
       json[node.id] = {
         id: node.id,
         text: node.text(),
         comment: node.comment(),
-        parentId: node.parent ? node.parent.id : null,
+        parentId: node.parent ? node.parent.id : -1,
         childrenId: []
       };
       node.children.forEach(child => {
         json[node.id].childrenId.push(child.id);
-        queue.push(child);
       });
-    }
+    })
     return json;
   }
 
-  // TODO:
-  fromJson(json: MapJson): MapNode {
-
+  loadJson(json: MapJson) {
+    const rootInfo = json[json.rootId];
+    if (!rootInfo) {
+      return;
+    }
+    this._nextNodeId = 0;
+    this._root = new MapNode(this._nextNodeId++, 'root', 0, rootInfo.text, rootInfo.comment);
+    this._nodeIndices = { [this._root.id]: this._root };
+    const idMap: { [key: number]: number } = { [json.rootId]: this._root.id };
+    const ids: number[] = [...rootInfo.childrenId];
+    while (ids.length > 0) {
+      const id = ids.shift() as number;
+      const info = json[id];
+      if (!info) {
+        continue;
+      }
+      const nodeId = this.addNode(idMap[info.parentId], info.text);
+      idMap[info.id] = nodeId;
+      info.childrenId.forEach((childId: number) => ids.push(childId));
+    }
   }
 
   protected _innerRender() {
@@ -256,12 +260,7 @@ export default class BasicMapGraph {
         x: -this._root.size.w / 2, 
         y: -this._root.size.h / 2
       });
-      const nodes: MapNode[] = [this._root];
-      while (nodes.length > 0) {
-        const node = nodes.shift();
-        if (!node) {
-          continue;
-        }
+      this._root.traverse(node => {
         this._renderNode(node);
         const childPosX = node.position().x + node.size.w + MAP_HORIZONTAL_INTERVAL;
         let childPosY = node.position().y + node.size.h / 2 - node.treeSpace().h / 2;
@@ -269,23 +268,16 @@ export default class BasicMapGraph {
           childPosY += child.treeSpace().h / 2 - child.size.h / 2;
           child.position({ x: childPosX, y: childPosY });
           this._renderLink(node, child);
-          nodes.push(child);
           childPosY += child.size.h / 2 + child.treeSpace().h / 2 + MAP_VERTICAL_INTERVAL;
         });
-      }
+      });
     } else {
-      const nodes: MapNode[] = [this._root];
-      while (nodes.length > 0) {
-        const node = nodes.shift();
-        if (!node) {
-          continue;
-        }
+      this._root.traverse(node => {
         this._renderNode(node);
         node.children.forEach((child) => {
           this._renderLink(node, child);
-          nodes.push(child);
         });
-      }
+      });
     }
     this._renderSelection();
 

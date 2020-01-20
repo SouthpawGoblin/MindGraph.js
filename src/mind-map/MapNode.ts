@@ -94,6 +94,17 @@ export default class MapNode extends BasicNode {
     return clonedNode;
   }
 
+  traverse(callback: (node: MapNode) => void) {
+    const nodes: MapNode[] = [this];
+    while (nodes.length > 0) {
+      const node = nodes.shift() as MapNode;
+      callback && callback(node);
+      node.children.forEach((child) => {
+        nodes.push(child);
+      });
+    }
+  }
+
   private _updateSize() {
     const style = MAP_NODE_STYLES[this._type];
     const rulerCanvas = document.createElement('canvas');
