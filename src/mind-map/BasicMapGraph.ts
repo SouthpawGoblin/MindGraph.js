@@ -1,7 +1,7 @@
 import MapNode from "./MapNode";
-import { Vec2, Rect, Size } from "../common/types";
+import { Vec2, Rect, Size, NodeStyle } from "../common/types";
 import _ from './utils';
-import { MapNodeType, MapJson } from "./types";
+import { MapNodeType, MapJson, MapLinkStyle } from "./types";
 import { MAP_VERTICAL_INTERVAL, MAP_HORIZONTAL_INTERVAL } from "./constants";
 
 export default class BasicMapGraph {
@@ -104,6 +104,26 @@ export default class BasicMapGraph {
     return node.id;
   }
 
+  // returns added node's id
+  addExistingNode(parentId: number, node: MapNode, position?: number) {
+    const parent = this._nodeIndices[parentId];
+    if (!parent) {
+      throw new Error('"addExistingNode" failed, parent node not found.');
+    }
+    if (typeof position === 'number' && position >= 0 && position <= parent.children.length) {
+      parent.children.splice(position, 0, node);
+    } else {
+      parent.children.push(node);
+    }
+    node.parent = parent;
+    this._traceBackUpdateSpaces(parent);
+    this._nodeIndices[node.id] = node;
+    // FIXME: update whole subtree indices
+    this._needsRerender = true;
+    this._needsReposition = true;
+    return node.id;
+  }
+
   // returns deleted node's parent id
   deleteNode(nodeId: number): number {
     const node = this._nodeIndices[nodeId];
@@ -115,6 +135,7 @@ export default class BasicMapGraph {
     node.parent.children.splice(idx, 1);
     this._traceBackUpdateSpaces(node.parent);
     delete this._nodeIndices[nodeId];
+    // FIXME: delete whole subtree indices
     if (this._selectedNodeId === nodeId) {
       // change selection to siblings or parent
       if (node.parent.children.length > 0) {
@@ -156,7 +177,6 @@ export default class BasicMapGraph {
     this.deleteNode(nodeId);
   }
 
-  // TODO: extract BFS traverse
   pasteNode(parentNodeId: number) {
     if (!this._copiedNode) {
       return;
@@ -261,21 +281,25 @@ export default class BasicMapGraph {
         y: -this._root.size.h / 2
       });
       this._root.traverse(node => {
-        this._renderNode(node);
+        const style = _.getScaledNodeStyle(node.type(), this._scale);
+        this._renderNode(node, style);
         const childPosX = node.position().x + node.size.w + MAP_HORIZONTAL_INTERVAL;
         let childPosY = node.position().y + node.size.h / 2 - node.treeSpace().h / 2;
         node.children.forEach((child) => {
           childPosY += child.treeSpace().h / 2 - child.size.h / 2;
           child.position({ x: childPosX, y: childPosY });
-          this._renderLink(node, child);
+          const style = _.getScaledLinkStyle(this._scale);
+          this._renderLink(node, child, style);
           childPosY += child.size.h / 2 + child.treeSpace().h / 2 + MAP_VERTICAL_INTERVAL;
         });
       });
     } else {
       this._root.traverse(node => {
-        this._renderNode(node);
+        const style = _.getScaledNodeStyle(node.type(), this._scale);
+        this._renderNode(node, style);
         node.children.forEach((child) => {
-          this._renderLink(node, child);
+          const style = _.getScaledLinkStyle(this._scale);
+          this._renderLink(node, child, style);
         });
       });
     }
@@ -294,8 +318,7 @@ export default class BasicMapGraph {
   // hook for subclasses to override
   protected _afterGraphRender() {}
 
-  private _renderNode(node: MapNode) {
-    const style = _.getScaledNodeStyle(node.type(), this._scale);
+  protected _renderNode(node: MapNode, style: NodeStyle) {
     const pos: Vec2 = {
       x: node.position().x * this._scale,
       y: node.position().y * this._scale
@@ -333,7 +356,7 @@ export default class BasicMapGraph {
     ctx.fillText(node.text(), pos.x + style.padding + style.borderWidth, pos.y + style.padding + style.borderWidth + style.fontSize);
   }
 
-  private _renderLink(node1: MapNode, node2: MapNode) {
+  protected _renderLink(node1: MapNode, node2: MapNode, style: MapLinkStyle) {
     const pos1: Vec2 = {
       x: (node1.position().x + node1.size.w) * this._scale,
       y: (node1.position().y + node1.size.h / 2) * this._scale
@@ -343,18 +366,17 @@ export default class BasicMapGraph {
       y: (node2.position().y + node2.size.h / 2) * this._scale
     };
     const deltaX = pos2.x - pos1.x;
-    const linkStyle = _.getScaledLinkStyle(this._scale);
     const ctx = this._ctx;
     ctx.beginPath();
     ctx.moveTo(pos1.x, pos1.y);
     ctx.quadraticCurveTo(
-      pos1.x + linkStyle.cp2Ratio * deltaX,
+      pos1.x + style.cp2Ratio * deltaX,
       pos2.y,
       pos2.x,
       pos2.y
     );
-    ctx.lineWidth = linkStyle.lineWidth;
-    ctx.strokeStyle = linkStyle.lineColor;
+    ctx.lineWidth = style.lineWidth;
+    ctx.strokeStyle = style.lineColor;
     ctx.stroke();
   }
 

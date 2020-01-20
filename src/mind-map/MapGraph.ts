@@ -9,13 +9,17 @@ import { MAP_NODE_STYLES } from "./constants";
  */
 export default class MapGraph extends BasicMapGraph {
   protected _mouseLeftDragging: boolean;
+  protected _mouseLeftStartPos: Vec2;
   protected _mouseRightDragging: boolean;
+  protected _mouseRightStartPos: Vec2;
   protected _draggingNodeId: number;
 
   constructor(dom: HTMLElement) {
     super(dom);
     this._mouseLeftDragging = false;
+    this._mouseLeftStartPos = { x: 0, y: 0 };
     this._mouseRightDragging = false;
+    this._mouseRightStartPos = { x: 0, y: 0 };
     this._draggingNodeId = -1;
     this._registerInteractions();
   }
@@ -80,20 +84,24 @@ export default class MapGraph extends BasicMapGraph {
 
   private _handleMouseDown = (ev: MouseEvent) => {
     if (ev.button === 0) {
-      const pos: Vec2 = this.domToCanvas({
+      this._mouseLeftStartPos = {
         x: ev.offsetX,
         y: ev.offsetY
-      });
+      };
+      const pos: Vec2 = this.domToCanvas(this._mouseLeftStartPos);
       const node = this._getNodeAtPosition(pos);
       if (node) {
         this._draggingNodeId = node.id;
-      }
-      const selectedNode = this.selectedNode();
-      if (selectedNode && (!node || node.id !== selectedNode.id)) {
+        this.selectedNode(this._draggingNodeId);
+      } else {
         this.selectedNode(-1);
       }
       this._mouseLeftDragging = true;
     } else if (ev.button === 2) {
+      this._mouseRightStartPos = {
+        x: ev.offsetX,
+        y: ev.offsetY
+      };
       this._mouseRightDragging = true;
     }
   }
@@ -102,7 +110,18 @@ export default class MapGraph extends BasicMapGraph {
     if (this._mouseLeftDragging) {
       if (this._draggingNodeId >= 0) {
         // dragging node
-        // TODO: render dragging trace
+        const node = this._nodeIndices[this._draggingNodeId];
+        if (node) {
+          const draggingNode = new MapNode(node.id, node.type(), node.depth, node.text(), node.comment());
+          draggingNode.position({
+            x: node.position().x + ev.offsetX - this._mouseLeftStartPos.x,
+            y: node.position().y + ev.offsetY - this._mouseLeftStartPos.y
+          });
+          const style = _.getScaledNodeStyle(draggingNode.type(), this._scale);
+          // TODO: dim dragging node's background
+          this._needsRerender = true;
+          requestAnimationFrame(() => this._renderNode(draggingNode, style));
+        }
       } else {
         // dragging canvas
         const deltaPos: Vec2 = {
@@ -123,12 +142,26 @@ export default class MapGraph extends BasicMapGraph {
   private _handleMouseUp = (ev: MouseEvent) => {
     if (ev.button === 0) {
       if (this._draggingNodeId >= 0) {
-        // TODO: possible node moving
-        this.selectedNode(this._draggingNodeId);
+        const pos: Vec2 = this.domToCanvas({
+          x: ev.offsetX,
+          y: ev.offsetY
+        });
+        const node = this._getNodeAtPosition(pos);
+        if (node && node.parent) {
+          const draggingNode = this._nodeIndices[this._draggingNodeId];
+          if (draggingNode && !node.isDescendentOf(draggingNode)) {
+            this.deleteNode(draggingNode.id);
+            const pos = node.parent.children.findIndex(child => child.id === node.id);
+            this.addExistingNode(node.parent.id, draggingNode, pos);
+          }
+        }
         this._draggingNodeId = -1;
+        this._needsRerender = true;
       }
+      this._mouseLeftStartPos = { x: 0, y: 0 };
       this._mouseLeftDragging = false;
     } else if (ev.button === 2) {
+      this._mouseRightStartPos = { x: 0, y: 0 };
       this._mouseRightDragging = false;
     }
   }

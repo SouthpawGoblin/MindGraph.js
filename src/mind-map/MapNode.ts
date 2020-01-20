@@ -105,6 +105,19 @@ export default class MapNode extends BasicNode {
     }
   }
 
+  isDescendentOf(node: MapNode): boolean {
+    let currentNode: MapNode | null = this;
+    let result = false;
+    while (currentNode) {
+      if (currentNode.id === node.id) {
+        result = true;
+        break;
+      }
+      currentNode = currentNode.parent;
+    }
+    return result;
+  }
+
   private _updateSize() {
     const style = MAP_NODE_STYLES[this._type];
     const rulerCanvas = document.createElement('canvas');

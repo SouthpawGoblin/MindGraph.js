@@ -1,10 +1,10 @@
 {
   "name": "mind-graph-js",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "main": "dist/index.min.js",
   "types": "dist/index.d.ts",
   "repository": "https://github.com/SouthpawGoblin/MindGraph.js.git",
-  "author": "Yinzhe_Qi <qiyzh@neusoft.com>",
+  "author": "Roger Chi <goblin-qyz@163.com>",
   "license": "MIT",
   "private": false,
   "scripts": {
