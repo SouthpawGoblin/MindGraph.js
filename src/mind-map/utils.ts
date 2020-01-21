@@ -1,12 +1,11 @@
-import { MapNodeType, MapLinkStyle, MapSelectionStyle } from "./types";
-import { NodeStyle } from "../common/types";
+import { MapNodeType, MapLinkStyle, MapSelectionStyle, MapNodeStyle } from "./types";
 import { MAP_NODE_STYLES, MAP_LINK_STYLE, MAP_SELECTION_STYLE } from "./constants";
 
 function getChildNodeType(parentType: MapNodeType): MapNodeType {
   return parentType === 'root' ? 'primary' : 'secondary';
 }
 
-function getScaledNodeStyle(type: MapNodeType, scale: number): NodeStyle {
+function getScaledNodeStyle(type: MapNodeType, scale: number): MapNodeStyle {
   const style = MAP_NODE_STYLES[type];
   return {
     ...style,

@@ -118,7 +118,9 @@ export default class MapGraph extends BasicMapGraph {
             y: node.position().y + ev.offsetY - this._mouseLeftStartPos.y
           });
           const style = _.getScaledNodeStyle(draggingNode.type(), this._scale);
-          // TODO: dim dragging node's background
+          style.color = style.draggingColor;
+          style.background = style.draggingBackground;
+          style.borderColor = style.draggingBorderColor;
           this._needsRerender = true;
           requestAnimationFrame(() => this._renderNode(draggingNode, style));
         }
@@ -153,6 +155,7 @@ export default class MapGraph extends BasicMapGraph {
             this.deleteNode(draggingNode.id);
             const pos = node.parent.children.findIndex(child => child.id === node.id);
             this.addExistingNode(node.parent.id, draggingNode, pos);
+            this.selectedNode(draggingNode.id);
           }
         }
         this._draggingNodeId = -1;

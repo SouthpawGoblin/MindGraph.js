@@ -2,10 +2,16 @@ import { NodeStyle, LinkStyle, SelectionStyle } from "../common/types";
 
 export type MapNodeType = 'root' | 'primary' | 'secondary';
 
+export interface MapNodeStyle extends NodeStyle {
+  draggingColor: string;
+  draggingBackground: string;
+  draggingBorderColor: string;
+}
+
 export interface MapNodeStyles {
-  root: NodeStyle,
-  primary: NodeStyle,
-  secondary: NodeStyle
+  root: MapNodeStyle,
+  primary: MapNodeStyle,
+  secondary: MapNodeStyle
 }
 
 export interface MapLinkStyle extends LinkStyle {

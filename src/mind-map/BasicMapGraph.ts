@@ -117,8 +117,7 @@ export default class BasicMapGraph {
     }
     node.parent = parent;
     this._traceBackUpdateSpaces(parent);
-    this._nodeIndices[node.id] = node;
-    // FIXME: update whole subtree indices
+    node.traverse(n => this._nodeIndices[n.id] = n);
     this._needsRerender = true;
     this._needsReposition = true;
     return node.id;
@@ -134,8 +133,7 @@ export default class BasicMapGraph {
     const idx = node.parent.children.findIndex(child => child.id === nodeId);
     node.parent.children.splice(idx, 1);
     this._traceBackUpdateSpaces(node.parent);
-    delete this._nodeIndices[nodeId];
-    // FIXME: delete whole subtree indices
+    node.traverse(n => delete this._nodeIndices[n.id]);
     if (this._selectedNodeId === nodeId) {
       // change selection to siblings or parent
       if (node.parent.children.length > 0) {

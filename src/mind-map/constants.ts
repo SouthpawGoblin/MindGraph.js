@@ -14,7 +14,10 @@ export const MAP_NODE_STYLES: MapNodeStyles = {
     borderWidth: 4,
     borderColor: '#000',
     borderRadius: 6,
-    padding: 12
+    padding: 12,
+    draggingColor: 'rgba(255,255,255,0.5)',
+    draggingBackground: 'rgba(102,102,102,0.5)',
+    draggingBorderColor: 'rgba(0,0,0,0.5)'
   },
   primary: {
     fontSize: 18,
@@ -26,7 +29,10 @@ export const MAP_NODE_STYLES: MapNodeStyles = {
     borderWidth: 2,
     borderColor: '#000',
     borderRadius: 4,
-    padding: 8
+    padding: 8,
+    draggingColor: 'rgba(0,0,0,0.5)',
+    draggingBackground: 'rgba(255,255,255,0.5)',
+    draggingBorderColor: 'rgba(0,0,0,0.5)'
   },
   secondary: {
     fontSize: 14,
@@ -38,7 +44,10 @@ export const MAP_NODE_STYLES: MapNodeStyles = {
     borderWidth: 0,
     borderColor: '#000',
     borderRadius: 0,
-    padding: 4
+    padding: 4,
+    draggingColor: 'rgba(0,0,0,0.5)',
+    draggingBackground: 'transparent',
+    draggingBorderColor: 'rgba(0,0,0,0.5)'
   } 
 }
 
