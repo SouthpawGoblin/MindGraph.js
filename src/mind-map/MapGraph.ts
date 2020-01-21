@@ -1,8 +1,8 @@
 import BasicMapGraph from "./BasicMapGraph";
-import { Vec2, Size } from "../common/types";
+import { Vec2, Size, Rect } from "../common/types";
 import MapNode from "./MapNode";
 import _ from "./utils";
-import { MAP_NODE_STYLES } from "./constants";
+import { MAP_NODE_STYLES, MAP_VERTICAL_INTERVAL, MAP_INSERT_MARK_STYLE } from "./constants";
 
 /**
  * BasicMapGraph with canvas interactions
@@ -13,6 +13,7 @@ export default class MapGraph extends BasicMapGraph {
   protected _mouseRightDragging: boolean;
   protected _mouseRightStartPos: Vec2;
   protected _draggingNodeId: number;
+  protected _targetNodeId: number;
 
   constructor(dom: HTMLElement) {
     super(dom);
@@ -21,6 +22,7 @@ export default class MapGraph extends BasicMapGraph {
     this._mouseRightDragging = false;
     this._mouseRightStartPos = { x: 0, y: 0 };
     this._draggingNodeId = -1;
+    this._targetNodeId = -1;
     this._registerInteractions();
   }
 
@@ -112,17 +114,32 @@ export default class MapGraph extends BasicMapGraph {
         // dragging node
         const node = this._nodeIndices[this._draggingNodeId];
         if (node) {
+          // render dragging node
           const draggingNode = new MapNode(node.id, node.type(), node.depth, node.text(), node.comment());
-          draggingNode.position({
-            x: node.position().x + ev.offsetX - this._mouseLeftStartPos.x,
-            y: node.position().y + ev.offsetY - this._mouseLeftStartPos.y
+          let newPos = this.canvasToDom(node.position());
+          newPos = this.domToCanvas({
+            x: newPos.x + ev.offsetX - this._mouseLeftStartPos.x,
+            y: newPos.y + ev.offsetY - this._mouseLeftStartPos.y
           });
+          draggingNode.position(newPos);
           const style = _.getScaledNodeStyle(draggingNode.type(), this._scale);
           style.color = style.draggingColor;
           style.background = style.draggingBackground;
           style.borderColor = style.draggingBorderColor;
-          this._needsRerender = true;
           requestAnimationFrame(() => this._renderNode(draggingNode, style));
+
+          // render insert mark
+          const pos: Vec2 = this.domToCanvas({
+            x: ev.offsetX,
+            y: ev.offsetY
+          });
+          const targetNode = this._getNodeAtPosition(pos);
+          if (targetNode && targetNode.parent && !targetNode.isDescendentOf(draggingNode)) {
+            this._targetNodeId = targetNode.id;
+            requestAnimationFrame(() => this._renderInsertMark(targetNode));
+          }
+
+          this._needsRerender = true;
         }
       } else {
         // dragging canvas
@@ -144,18 +161,15 @@ export default class MapGraph extends BasicMapGraph {
   private _handleMouseUp = (ev: MouseEvent) => {
     if (ev.button === 0) {
       if (this._draggingNodeId >= 0) {
-        const pos: Vec2 = this.domToCanvas({
-          x: ev.offsetX,
-          y: ev.offsetY
-        });
-        const node = this._getNodeAtPosition(pos);
-        if (node && node.parent) {
-          const draggingNode = this._nodeIndices[this._draggingNodeId];
-          if (draggingNode && !node.isDescendentOf(draggingNode)) {
+        const draggingNode = this._nodeIndices[this._draggingNodeId];
+        if (draggingNode && this._targetNodeId >= 0) {
+          const targetNode = this._nodeIndices[this._targetNodeId];  
+          if (targetNode && targetNode.parent) {
             this.deleteNode(draggingNode.id);
-            const pos = node.parent.children.findIndex(child => child.id === node.id);
-            this.addExistingNode(node.parent.id, draggingNode, pos);
+            const pos = targetNode.parent.children.findIndex(child => child.id === targetNode.id);
+            this.addExistingNode(targetNode.parent.id, draggingNode, pos);
             this.selectedNode(draggingNode.id);
+            this._targetNodeId = -1;
           }
         }
         this._draggingNodeId = -1;
@@ -215,8 +229,9 @@ export default class MapGraph extends BasicMapGraph {
             newNodeId = this.addNode(parent.id, undefined, pos >= 0 ? pos + 1 : undefined);
           }
         }
-        this.selectedNode(newNodeId);
-        requestAnimationFrame(() => this._renderInput(this.selectedNode()));
+        const selNode = this.selectedNode(newNodeId);
+        requestAnimationFrame(() => this._renderInput(selNode));
+        // TODO: scroll into view
         break;
       }
       case "Delete": {
@@ -258,8 +273,8 @@ export default class MapGraph extends BasicMapGraph {
       const node = this._nodeIndices[id];
       const lt: Vec2 = node.position();
       const rb: Vec2 = {
-        x: lt.x + node.size.w,
-        y: lt.y + node.size.h
+        x: lt.x + node.size().w,
+        y: lt.y + node.size().h
       };
       if (pos.x >= lt.x && pos.x <= rb.x && pos.y >= lt.y && pos.y <= rb.y) {
         return node;
@@ -279,8 +294,8 @@ export default class MapGraph extends BasicMapGraph {
       y: node.position().y + textPadding,
     });
     const inputSize: Size = {
-      w: (node.size.w - textPadding * 2) * this._scale,
-      h: (node.size.h - textPadding * 2) * this._scale
+      w: (node.size().w - textPadding * 2) * this._scale,
+      h: (node.size().h - textPadding * 2) * this._scale
     };
     const scaledStyle = _.getScaledNodeStyle(node.type(), this._scale);
     const input = document.createElement('input');
@@ -310,5 +325,34 @@ export default class MapGraph extends BasicMapGraph {
     this._dom.appendChild(input);
     input.focus();
     input.select();
+  }
+
+  private _renderInsertMark(node: MapNode | null) {
+    if (!node || !node.parent) {
+      return;
+    }
+    const markStyle = _.getScaledInsertMarkStyle(this._scale);
+    const linkStyle = _.getScaledLinkStyle(this._scale);
+    linkStyle.lineColor = markStyle.background;
+    const dummyNode = node.clone();
+    dummyNode.position({
+      x: node.position().x,
+      y: node.position().y - MAP_VERTICAL_INTERVAL / 2 - markStyle.height / 2
+    });
+    dummyNode.size({
+      w: MAP_INSERT_MARK_STYLE.width,
+      h: MAP_INSERT_MARK_STYLE.height
+    });
+    const markRect: Rect = {
+      x: dummyNode.position().x * this._scale,
+      y: dummyNode.position().y * this._scale,
+      w: markStyle.width,
+      h: markStyle.height
+    }
+    this._renderLink(node.parent, dummyNode, linkStyle);
+    const ctx = this._ctx;
+    ctx.beginPath();
+    ctx.fillStyle = markStyle.background;
+    ctx.fillRect(markRect.x, markRect.y, markRect.w, markRect.h);
   }
 }

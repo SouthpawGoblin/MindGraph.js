@@ -19,10 +19,11 @@ export default class BasicMapGraph {
   protected _renderLoop: boolean;
   protected _selectedNodeId: number;
   protected _copiedNode: MapNode | null;
-  protected _nextNodeId: number = 0;
+  protected _nextNodeId: number;
 
-  constructor(dom: HTMLElement, json?: MapJson) {
+  constructor(dom: HTMLElement) {
     this._parentDom = dom;
+    this._nextNodeId = 0;
     this._root = new MapNode(this._nextNodeId++, 'root', 0, 'Main Theme');
     this._nodeIndices = { [this._root.id]: this._root };
     const canvas = document.createElement('canvas');
@@ -65,10 +66,10 @@ export default class BasicMapGraph {
 
   translate(translate?: Vec2): Vec2 {
     if (typeof translate !== 'undefined' && (translate.x !== this._translate.x || translate.y !== this._translate.y)) {
-      this._translate = translate;
+      this._translate = Object.assign({}, translate);
       this._needsRerender = true;
     }
-    return this._translate;
+    return Object.assign({}, this._translate);
   }
 
   get rootId(): number {
@@ -275,20 +276,20 @@ export default class BasicMapGraph {
     // BFS node tree rendering
     if (this._needsReposition) {
       this._root.position({
-        x: -this._root.size.w / 2, 
-        y: -this._root.size.h / 2
+        x: -this._root.size().w / 2, 
+        y: -this._root.size().h / 2
       });
       this._root.traverse(node => {
         const style = _.getScaledNodeStyle(node.type(), this._scale);
         this._renderNode(node, style);
-        const childPosX = node.position().x + node.size.w + MAP_HORIZONTAL_INTERVAL;
-        let childPosY = node.position().y + node.size.h / 2 - node.treeSpace().h / 2;
+        const childPosX = node.position().x + node.size().w + MAP_HORIZONTAL_INTERVAL;
+        let childPosY = node.position().y + node.size().h / 2 - node.treeSpace().h / 2;
         node.children.forEach((child) => {
-          childPosY += child.treeSpace().h / 2 - child.size.h / 2;
+          childPosY += child.treeSpace().h / 2 - child.size().h / 2;
           child.position({ x: childPosX, y: childPosY });
           const style = _.getScaledLinkStyle(this._scale);
           this._renderLink(node, child, style);
-          childPosY += child.size.h / 2 + child.treeSpace().h / 2 + MAP_VERTICAL_INTERVAL;
+          childPosY += child.size().h / 2 + child.treeSpace().h / 2 + MAP_VERTICAL_INTERVAL;
         });
       });
     } else {
@@ -322,8 +323,8 @@ export default class BasicMapGraph {
       y: node.position().y * this._scale
     };
     const size: Size = {
-      w: node.size.w * this._scale,
-      h: node.size.h * this._scale
+      w: node.size().w * this._scale,
+      h: node.size().h * this._scale
     };
     const ctx = this._ctx;
     // TODO: support rounded rect
@@ -356,12 +357,12 @@ export default class BasicMapGraph {
 
   protected _renderLink(node1: MapNode, node2: MapNode, style: MapLinkStyle) {
     const pos1: Vec2 = {
-      x: (node1.position().x + node1.size.w) * this._scale,
-      y: (node1.position().y + node1.size.h / 2) * this._scale
+      x: (node1.position().x + node1.size().w) * this._scale,
+      y: (node1.position().y + node1.size().h / 2) * this._scale
     };
     const pos2: Vec2 = {
       x: node2.position().x * this._scale,
-      y: (node2.position().y + node2.size.h / 2) * this._scale
+      y: (node2.position().y + node2.size().h / 2) * this._scale
     };
     const deltaX = pos2.x - pos1.x;
     const ctx = this._ctx;
@@ -388,8 +389,8 @@ export default class BasicMapGraph {
       y: node.position().y * this._scale
     };
     const scaledSize: Size = {
-      w: node.size.w * this._scale,
-      h: node.size.h * this._scale
+      w: node.size().w * this._scale,
+      h: node.size().h * this._scale
     };
     const style = _.getScaledSelectionStyle(this._scale);
     const pos: Vec2 = {
@@ -412,16 +413,16 @@ export default class BasicMapGraph {
     const oldSpace = node.treeSpace();
     let childrenMaxWidth = -Infinity;
     let childrenTotalHeight = node.children.reduce((total, child) => {
-      if (child.size.w > childrenMaxWidth) {
-        childrenMaxWidth = child.size.w;
+      if (child.size().w > childrenMaxWidth) {
+        childrenMaxWidth = child.size().w;
       }
       return total + child.treeSpace().h;
     }, 0);
     childrenTotalHeight += (node.children.length - 1) * MAP_VERTICAL_INTERVAL;
-    if (childrenTotalHeight < node.size.h) {
-      childrenTotalHeight = node.size.h;
+    if (childrenTotalHeight < node.size().h) {
+      childrenTotalHeight = node.size().h;
     }
-    let deltaWidth = childrenMaxWidth - (oldSpace.w - node.size.w - MAP_HORIZONTAL_INTERVAL);
+    let deltaWidth = childrenMaxWidth - (oldSpace.w - node.size().w - MAP_HORIZONTAL_INTERVAL);
     let deltaHeight = childrenTotalHeight - oldSpace.h;
     if (deltaWidth !== 0 || deltaHeight !== 0) {
       let current: MapNode | null = node;

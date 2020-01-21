@@ -21,10 +21,7 @@ export default class MapNode extends BasicNode {
     this.depth = depth;
     this._size = { w: 0, h: 0 };
     this._updateSize();
-    this._treeSpace = {
-      w: this._size.w,
-      h: this._size.h
-    };
+    this._treeSpace = Object.assign({}, this._size);
     this._position = { x: 0, y: 0 };
   }
 
@@ -54,32 +51,23 @@ export default class MapNode extends BasicNode {
 
   treeSpace(space?: Size) {
     if (typeof space !== 'undefined' && (space.w !== this._treeSpace.w || space.h !== this._treeSpace.h)) {
-      this._treeSpace = {
-        w: space.w,
-        h: space.h
-      };
+      this._treeSpace = Object.assign({}, space);
     }
-    return {
-      w: this._treeSpace.w,
-      h: this._treeSpace.h
-    };
+    return Object.assign({}, this._treeSpace);
   }
 
   position(pos?: Vec2) {
     if (typeof pos !== 'undefined' && (pos.x !== this._position.x || pos.y !== this._position.y)) {
-      this._position = {
-        x: pos.x,
-        y: pos.y
-      };
+      this._position = Object.assign({}, pos);
     }
-    return {
-      x: this._position.x,
-      y: this._position.y
-    };
+    return Object.assign({}, this._position);
   }
 
-  get size(): Size {
-    return this._size;
+  size(size?: Size): Size {
+    if (typeof size !== 'undefined' && (size.w !== this._size.w || size.h !== this._size.h)) {
+      this._size = Object.assign({}, size);
+    }
+    return Object.assign({}, this._size);
   }
 
   clone(): MapNode {

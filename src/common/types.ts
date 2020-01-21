@@ -38,3 +38,9 @@ export interface SelectionStyle {
   outlineColor: string;
   outlineWidth: number;
 }
+
+export interface InsertMarkStyle {
+  width: number;
+  height: number;
+  background: string;
+}

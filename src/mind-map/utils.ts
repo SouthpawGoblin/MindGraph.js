@@ -1,5 +1,6 @@
 import { MapNodeType, MapLinkStyle, MapSelectionStyle, MapNodeStyle } from "./types";
-import { MAP_NODE_STYLES, MAP_LINK_STYLE, MAP_SELECTION_STYLE } from "./constants";
+import { MAP_NODE_STYLES, MAP_LINK_STYLE, MAP_SELECTION_STYLE, MAP_INSERT_MARK_STYLE } from "./constants";
+import { InsertMarkStyle } from "../common/types";
 
 function getChildNodeType(parentType: MapNodeType): MapNodeType {
   return parentType === 'root' ? 'primary' : 'secondary';
@@ -31,11 +32,20 @@ function getScaledSelectionStyle(scale: number): MapSelectionStyle {
   };
 }
 
+function getScaledInsertMarkStyle(scale: number): InsertMarkStyle {
+  return {
+    ...MAP_INSERT_MARK_STYLE,
+    width: MAP_INSERT_MARK_STYLE.width * scale,
+    height: MAP_INSERT_MARK_STYLE.height * scale
+  };
+}
+
 const _ = {
   getChildNodeType,
   getScaledNodeStyle,
   getScaledLinkStyle,
-  getScaledSelectionStyle
+  getScaledSelectionStyle,
+  getScaledInsertMarkStyle
 };
 
 export default _;
