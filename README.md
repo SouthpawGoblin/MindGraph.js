@@ -31,10 +31,11 @@ yarn add mind-graph-js
 ```js
 import mindGraph from 'mind-graph-js';
 ```
-2. create a new `MindMap` instance, which takes a dom element as the canvas container.
+2. create a new `MindMap` instance, which takes a dom element as the canvas container, then render it.
 ```js
 const dom = document.getElementById('app');
 const mindMap = new mindGraph.MindMap(dom);
+mindMap.render();
 ```
 3. node operations are based on node ids, to add our first node, we need to aquire the root node id.
 ```js
