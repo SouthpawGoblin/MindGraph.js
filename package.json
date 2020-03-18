@@ -1,6 +1,6 @@
 {
   "name": "mind-graph-js",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "main": "dist/index.min.js",
   "types": "dist/index.d.ts",
   "repository": "https://github.com/SouthpawGoblin/MindGraph.js.git",
@@ -23,5 +23,16 @@
     "typescript": "^3.7.4",
     "webpack": "^4.41.5",
     "webpack-cli": "^3.3.10"
-  }
+  },
+  "files": [
+    "LICENSE",
+    "README.md",
+    "dist"
+  ],
+  "keywords": [
+    "mind map",
+    "graph",
+    "js",
+    "canvas"
+  ]
 }
