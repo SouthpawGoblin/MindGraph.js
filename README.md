@@ -63,7 +63,9 @@ loadJson(json: MapJson) | reconstruct current graph by json.
 - Hold "Ctrl" and use mouse wheel to zoom.
 - Click a node to select it.
 - Double click a node to edit it's text.
-- Drag & drop a node to change it's position
+- Drag & drop a node to change it's position.
+- "Enter" to add a sibling node of the selected node.
+- "Ctrl + Enter" to add a child node of the selected node.
 - "Ctrl + C" to copy the selected node.
 - "Ctrl + X" to cut the selected node.
 - "Ctrl + V" to paste copied node to the selected node. 
