@@ -1,0 +1,47 @@
+import MapNode from "./MapNode";
+import { Vec2, NodeStyle } from "../common/types";
+import { MapJson, MapLinkStyle } from "./types";
+export default class BasicMapGraph {
+    protected _root: MapNode;
+    protected _nodeIndices: {
+        [key: number]: MapNode;
+    };
+    protected _dom: HTMLElement;
+    protected _parentDom: HTMLElement;
+    protected _canvas: HTMLCanvasElement;
+    protected _ctx: CanvasRenderingContext2D;
+    protected _center: Vec2;
+    protected _scale: number;
+    protected _translate: Vec2;
+    protected _needsRerender: boolean;
+    protected _needsReposition: boolean;
+    protected _renderLoop: boolean;
+    protected _selectedNodeId: number;
+    protected _copiedNode: MapNode | null;
+    protected _nextNodeId: number;
+    constructor(dom: HTMLElement);
+    scale(scale?: number): number;
+    translate(translate?: Vec2): Vec2;
+    get rootId(): number;
+    selectedNode(id?: number): MapNode | null;
+    addNode(parentId: number, text?: string, position?: number): number;
+    addExistingNode(parentId: number, node: MapNode, position?: number): number;
+    deleteNode(nodeId: number): number;
+    updateNode(nodeId: number, text: string): void;
+    copyNode(nodeId: number): void;
+    cutNode(nodeId: number): void;
+    pasteNode(parentNodeId: number): void;
+    dispose(): void;
+    render: () => void;
+    canvasToDom(point: Vec2): Vec2;
+    domToCanvas(point: Vec2): Vec2;
+    toJson(): MapJson;
+    loadJson(json: MapJson): void;
+    protected _innerRender(): void;
+    protected _beforGraphRender(): void;
+    protected _afterGraphRender(): void;
+    protected _renderNode(node: MapNode, style: NodeStyle): void;
+    protected _renderLink(node1: MapNode, node2: MapNode, style: MapLinkStyle): void;
+    private _renderSelection;
+    private _traceBackUpdateSpaces;
+}

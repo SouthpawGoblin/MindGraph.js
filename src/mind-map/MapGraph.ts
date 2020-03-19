@@ -67,7 +67,7 @@ export default class MapGraph extends BasicMapGraph {
   
   private _handleWheel = (ev: WheelEvent) => {
     ev.preventDefault();
-    if (ev.ctrlKey) {
+    if (ev.ctrlKey || ev.metaKey) {
       // scaling
       const deltaScale = ev.deltaY > 0 ? -0.05 : 0.05;
       let scale = this._scale + deltaScale;
@@ -220,7 +220,7 @@ export default class MapGraph extends BasicMapGraph {
         break;
       case "Enter": { // Enter: add sibling node, Ctrl+Enter: add child node
         let newNodeId = -1;
-        if (ev.ctrlKey) {
+        if (ev.ctrlKey || ev.metaKey) {
           newNodeId = this.addNode(selectedNode.id);
         } else {
           const parent = selectedNode.parent;
@@ -243,19 +243,19 @@ export default class MapGraph extends BasicMapGraph {
         break;
       }
       case "c": {
-        if (ev.ctrlKey) { // copy
+        if (ev.ctrlKey || ev.metaKey) { // copy
           this.copyNode(selectedNode.id);
         }
         break;
       }
       case "x": {
-        if (ev.ctrlKey) { // cut
+        if (ev.ctrlKey || ev.metaKey) { // cut
           this.cutNode(selectedNode.id);
         }
         break;
       }
       case "v": {
-        if (ev.ctrlKey) { // paste
+        if (ev.ctrlKey || ev.metaKey) { // paste
           this.pasteNode(selectedNode.id);
         }
         break;

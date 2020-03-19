@@ -67,3 +67,5 @@ loadJson(json: MapJson) | reconstruct current graph by json.
 - "Ctrl + C" to copy the selected node.
 - "Ctrl + X" to cut the selected node.
 - "Ctrl + V" to paste copied node to the selected node. 
+
+***for Mac, "Cmd" key and "Ctrl" key work the same**
