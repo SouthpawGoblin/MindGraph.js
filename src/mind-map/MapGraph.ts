@@ -204,6 +204,7 @@ export default class MapGraph extends BasicMapGraph {
   }
 
   private _handleKeyUp = (ev: KeyboardEvent) => {
+    //FIXME: Cmd key only works in keydown event
     const selectedNode = this.selectedNode();
     if (!selectedNode) {
       return;
